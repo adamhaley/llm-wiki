@@ -33,3 +33,11 @@ Normalized legacy journal filenames to zero-padded dates, quarantined non-journa
 ## [2026-05-24] tool | promotion workflow baseline
 
 Added agent-driven promotion workflow docs, a promotion skill, and deterministic helper commands for repeated names, repeated phrases, and orphan-note discovery without automating semantic page creation.
+
+## [2026-05-24] tool | second brain topic
+
+Added a canonical topic page for the practical second-brain workflow, including capture, promotion, review rhythm, and web clipper handling guidance.
+
+## [2026-05-24] tool | second brain boundary
+
+Expanded the Second Brain topic with the practical boundary between the deterministic tool layer and the meaning-oriented vault layer, including what is appropriate to automate versus keep human or agent in the loop.

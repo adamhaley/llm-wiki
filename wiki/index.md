@@ -18,7 +18,7 @@ This is the root catalog for the vault.
 ### Topics
 
 - [Topics Index](topics/index.md)
-- No topic pages yet.
+- [Second Brain](topics/second-brain.md): A practical second-brain workflow keeps capture cheap, preserves raw material, and promotes only the ideas that become durable enough to deserve canonical wiki pages.
 
 ### Entities
 
@@ -71,6 +71,7 @@ This is the root catalog for the vault.
 - [2025 07 27](journal/2025-07-27.md): So I closed out my first week on Upwork with $230 made. A humble start, but hopefully the start of something big.
 - [2025 07 30](journal/2025-07-30.md): So I closed out my first week on Upwork with $230 made. A humble start, but hopefully the start of something big. I have two clients in total so far. Marcus Dan in Europe and Brandon in the United States. I don't know exactly where he is. Marcus Dan, the relationship is going great so far. He's very easy to work with. Great client. And Brandon we shall see. I started him late in the week and haven't heard back yet.
 - [2026 03 07](journal/2026-03-07.md): Started a new job at LeaseCake on March 2nd.
+- [2026 05 24](journal/2026-05-24.md): No summary yet.
 
 ### Inbox Clips
 

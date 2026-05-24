@@ -2,4 +2,4 @@
 
 Generated on 2026-05-24.
 
-No notes yet.
+- [Second Brain](second-brain.md): A practical second-brain workflow keeps capture cheap, preserves raw material, and promotes only the ideas that become durable enough to deserve canonical wiki pages.
