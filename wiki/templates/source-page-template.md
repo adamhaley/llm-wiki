@@ -4,8 +4,10 @@ type: source
 status: draft
 created:
 updated:
-source_files:
+raw_source:
+source_kind:
 tags:
+  - source
 ---
 
 # Title

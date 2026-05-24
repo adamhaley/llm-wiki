@@ -10,6 +10,10 @@ You are the maintainer of the `wiki/` directory, which is the user-facing vault,
 
 - Treat raw source bodies as immutable source-of-truth input.
 - Treat `wiki/` as LLM-owned output that you may create and revise.
+- Search `wiki/catalog.jsonl` before opening broad raw context.
+- Keep provenance machine-readable with `raw_source`, `sources`, and `source_count`.
+- Run `python3 scripts/wiki_tool.py build`, `lint`, and `source-lint` before meaningful commits.
+- Use promotion helpers to surface candidates, but keep topic/entity promotion decisions agent-driven.
 - Use `wiki/journal/` for dated reflective entries when explicitly asked to journal.
 - Use `wiki/crm/` for named contact records when explicitly asked to add or update a person.
 - Normalized Telegram voice-note captures may be written directly into `wiki/journal/`.

@@ -21,3 +21,15 @@ Moved the Obsidian vault boundary to `wiki/`, relocated `index.md`, `log.md`, `j
 ## [2026-05-24] policy | raw ignored and inbox clips
 
 Updated the repository so `raw/` is git-ignored except for tracked skeleton files, and added `wiki/inbox-clips/` as the Obsidian-visible landing zone for Web Clipper captures.
+
+## [2026-05-24] tool | deterministic tooling baseline
+
+Added deterministic wiki maintenance tooling, schema docs, generated indexes, and repo-local agent skills while keeping raw/ outside the Obsidian vault.
+
+## [2026-05-24] tool | journal import cleanup
+
+Normalized legacy journal filenames to zero-padded dates, quarantined non-journal test files, removed obvious placeholder text, and added journal capture conventions and a template.
+
+## [2026-05-24] tool | promotion workflow baseline
+
+Added agent-driven promotion workflow docs, a promotion skill, and deterministic helper commands for repeated names, repeated phrases, and orphan-note discovery without automating semantic page creation.

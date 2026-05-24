@@ -15,6 +15,7 @@ The repository is ready to accumulate sources and syntheses into an interlinked 
 
 ## Suggested Next Steps
 
-1. Add a first source file to `raw/inbox/`.
+1. Add a first source file to `raw/`.
 2. Ingest it into `wiki/sources/`.
-3. Let the first few topic and entity pages emerge from real material instead of pre-creating them.
+3. Run the deterministic maintenance commands in `Schema/command-reference.md`.
+4. Let the first few topic and entity pages emerge from real material instead of pre-creating them.

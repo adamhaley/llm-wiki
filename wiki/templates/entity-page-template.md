@@ -1,10 +1,12 @@
 ---
 title:
 type: entity
-status: active
+status: seed
 created:
 updated:
-source_files:
+sources:
+source_count: 0
+aliases:
 tags:
 ---
 

@@ -4,7 +4,9 @@ type: synthesis
 status: draft
 created:
 updated:
-source_files:
+sources:
+source_count: 0
+aliases:
 tags:
 ---
 

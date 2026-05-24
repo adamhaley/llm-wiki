@@ -1,5 +1,5 @@
 # CRM Index
 
-Alphabetical list of person records.
+Generated on 2026-05-24.
 
-No CRM records yet.
+No notes yet.

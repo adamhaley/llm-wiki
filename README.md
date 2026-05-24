@@ -5,9 +5,11 @@ This repository implements a local "LLM wiki" in the style described by Andrej K
 - `raw/` holds source material for ingestion.
 - `wiki/` is the markdown wiki and the Obsidian vault.
 - `WIKI_SCHEMA.md` defines the operating rules for agentic maintenance.
+- `scripts/wiki_tool.py` provides deterministic build, lint, and source coverage checks.
 
 The repository root is agent-facing infrastructure. The Obsidian-visible knowledge base lives under `wiki/`.
 `raw/` is intentionally noisy and is git-ignored except for its tracked skeleton files.
+This differs intentionally from some in-vault LLM wiki setups: raw source files stay outside the Obsidian vault, while provenance stays machine-readable inside wiki note frontmatter and the generated source manifest.
 
 The intent is simple:
 
@@ -21,6 +23,32 @@ Both Codex and Claude can use this repo:
 - `AGENTS.md` is the Codex entrypoint.
 - `CLAUDE.md` is the Claude entrypoint.
 - Both point at the shared schema in `WIKI_SCHEMA.md`.
+
+## Deterministic Layer
+
+Run these commands as the maintenance baseline:
+
+```bash
+python3 scripts/wiki_tool.py doctor
+python3 scripts/wiki_tool.py build
+python3 scripts/wiki_tool.py lint
+python3 scripts/wiki_tool.py source-scan --update --accept-covered
+python3 scripts/wiki_tool.py source-lint
+python3 scripts/audit_public.py
+```
+
+Generated artifacts:
+
+- `wiki/catalog.jsonl`
+- `wiki/index.md`
+- `wiki/*/index.md`
+- `Schema/source-manifest.jsonl`
+
+Promotion helpers:
+
+- `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
+- `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
+- `python3 scripts/wiki_tool.py orphan-notes`
 
 ## Directory Layout
 

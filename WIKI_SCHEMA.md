@@ -19,6 +19,7 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - Raw source bodies are immutable. Do not edit them in place.
 - `wiki/` is editable. Prefer incremental edits over wholesale rewrites.
 - The index and log are mandatory maintenance files.
+- The deterministic toolchain lives in `scripts/wiki_tool.py` and `scripts/audit_public.py`.
 
 ## Directory Conventions
 
@@ -43,6 +44,12 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - `wiki/templates/`: starter templates only.
 - `wiki/journal/`: dated notes grounded in the wiki and past entries.
 - `wiki/crm/`: person records and relationship context.
+- `wiki/catalog.jsonl`: generated machine-readable note catalog.
+
+### `Schema/`
+
+- `Schema/source-manifest.jsonl`: generated machine-readable source coverage manifest.
+- `Schema/*.md`: frontmatter, naming, workflow, and command contracts for the tooling layer.
 
 ## Capture Policy
 
@@ -71,6 +78,8 @@ Web Clipper captures may land in `wiki/inbox-clips/` first and later be normaliz
 - When adding a new page, add at least one inbound path by updating another page to point to it.
 - Prefer explicit links over relying on text search alone.
 
+Because `raw/` lives outside the Obsidian vault on purpose, provenance to raw files should be preserved primarily in frontmatter metadata and generated manifests, not only as clickable Obsidian links.
+
 ## Page Shape
 
 Use light YAML frontmatter when it helps, but do not turn pages into metadata dumps.
@@ -84,7 +93,8 @@ type:
 status:
 created:
 updated:
-source_files:
+sources:
+source_count:
 tags:
 ---
 ```
@@ -112,6 +122,39 @@ Every ingested source should generally get a page in `wiki/sources/` that record
 
 Do not copy large source texts into the wiki. Summarize and quote sparingly.
 
+Source page frontmatter should include:
+
+```yaml
+---
+title:
+type: source
+status:
+created:
+updated:
+raw_source:
+source_kind:
+tags:
+  - source
+---
+```
+
+Compiled durable notes in `wiki/topics/`, `wiki/entities/`, `wiki/syntheses/`, and `wiki/crm/` should include:
+
+```yaml
+---
+title:
+type:
+status:
+created:
+updated:
+sources:
+source_count:
+tags:
+---
+```
+
+The `sources` field should list repo-relative raw file paths such as `raw/article.md` or `raw/processed/article.md`.
+
 ## Ingest Workflow
 
 When asked to ingest a source:
@@ -121,9 +164,13 @@ When asked to ingest a source:
 3. Create or update the source page in `wiki/sources/`.
 4. Update any affected topic, entity, overview, or synthesis pages.
 5. Add or revise cross-links.
-6. Update `wiki/index.md`.
-7. Append an entry to `wiki/log.md`.
-8. Move the processed source into `raw/processed/` unless the user wants it left in place.
+6. Run `python3 scripts/wiki_tool.py build`.
+7. Run `python3 scripts/wiki_tool.py lint`.
+8. Run `python3 scripts/wiki_tool.py source-scan --update --accept-covered`.
+9. Run `python3 scripts/wiki_tool.py source-lint`.
+10. Update `wiki/index.md` if needed beyond the generated structure.
+11. Append an entry to `wiki/log.md`.
+12. Move the processed source into `raw/processed/` unless the user wants it left in place.
 
 Default ingest posture:
 
@@ -136,10 +183,12 @@ Default ingest posture:
 When asked a substantive question:
 
 1. Read `wiki/index.md` first.
-2. Read the most relevant linked pages in `wiki/`.
-3. Synthesize an answer from the wiki, citing the pages used.
-4. If the answer creates durable value, offer or perform filing it into `wiki/syntheses/`.
-5. Append to `wiki/log.md` only if the query materially changed the vault.
+2. Run `python3 scripts/wiki_tool.py search-catalog --query "topic"` when the topic is broad or ambiguous.
+3. Read the most relevant linked pages in `wiki/`.
+4. Open raw sources only when compiled notes are insufficient or source-level verification is needed.
+5. Synthesize an answer from the wiki, citing the pages used.
+6. If the answer creates durable value, offer or perform filing it into `wiki/syntheses/`.
+7. Append to `wiki/log.md` only if the query materially changed the vault.
 
 ## Journal Workflow
 
@@ -151,6 +200,24 @@ When asked to create or update a journal entry:
 4. Link to relevant wiki or CRM pages when the connection is durable.
 5. Update `wiki/index.md` only if the journal structure itself changed materially.
 6. Append to `wiki/log.md` if the change was an intentional vault maintenance action rather than a routine automated capture.
+
+## Promotion Workflow
+
+When asked to promote ideas from journal or source material into durable wiki pages:
+
+1. Start with helper signals such as:
+   - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
+   - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
+   - `python3 scripts/wiki_tool.py orphan-notes`
+2. Treat these outputs as candidate prompts, not automatic truth.
+3. Decide whether the material belongs in `wiki/topics/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+4. Prefer updating an existing canonical page over creating a new one.
+5. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
+6. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
+7. Run `python3 scripts/wiki_tool.py build`.
+8. Run `python3 scripts/wiki_tool.py lint`.
+9. Run `python3 scripts/audit_public.py`.
+10. Append to `wiki/log.md` if the promotion materially changed the vault.
 
 ## Lint Workflow
 
@@ -168,6 +235,24 @@ When asked to lint or health-check the wiki, look for:
 
 Prefer producing concrete fixes, not only observations.
 
+The deterministic baseline is:
+
+```bash
+python3 scripts/wiki_tool.py doctor
+python3 scripts/wiki_tool.py build
+python3 scripts/wiki_tool.py lint
+python3 scripts/wiki_tool.py source-lint
+python3 scripts/audit_public.py
+```
+
+Useful non-mutating promotion helpers:
+
+```bash
+python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
+python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
+python3 scripts/wiki_tool.py orphan-notes
+```
+
 ## Writing Style
 
 - Be factual, compressed, and specific.
@@ -182,5 +267,7 @@ Any change that creates or materially changes a durable wiki page should also up
 
 1. `wiki/index.md`
 2. `wiki/log.md`
+3. `wiki/catalog.jsonl`
+4. `Schema/source-manifest.jsonl` when raw coverage changed
 
 Do not leave those behind.
