@@ -17,3 +17,7 @@ Updated the schema and agent instructions to allow normalized Telegram voice-not
 ## [2026-05-23] refactor | wiki as vault
 
 Moved the Obsidian vault boundary to `wiki/`, relocated `index.md`, `log.md`, `journal/`, `crm/`, and `.obsidian/` under `wiki/`, and updated the repo docs so the repository root remains agent-facing infrastructure.
+
+## [2026-05-24] policy | raw ignored and inbox clips
+
+Updated the repository so `raw/` is git-ignored except for tracked skeleton files, and added `wiki/inbox-clips/` as the Obsidian-visible landing zone for Web Clipper captures.

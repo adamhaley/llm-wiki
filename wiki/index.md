@@ -8,6 +8,10 @@ This is the root catalog for the vault.
 
 ## Wiki
 
+### Inbox Clips
+
+- [Inbox Clips](inbox-clips/README.md): staging area for Obsidian Web Clipper captures before normalization or promotion.
+
 ### Sources
 
 No source pages yet.

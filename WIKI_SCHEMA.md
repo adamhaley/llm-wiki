@@ -27,10 +27,12 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - `raw/`: newly dropped source material awaiting ingest.
 - `raw/processed/`: source material that has already been ingested.
 - `raw/assets/`: local images, figures, screenshots, or attachments.
+- `raw/` is intentionally outside the Obsidian vault and may be git-ignored except for tracked skeleton files.
 
 ### `wiki/`
 
 - `wiki/.obsidian/`: vault-local Obsidian settings.
+- `wiki/inbox-clips/`: Obsidian-visible landing zone for Web Clipper captures.
 - `wiki/index.md`: vault catalog and starting point for navigation.
 - `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
@@ -47,11 +49,13 @@ The goal is not to re-read every raw source from scratch on every question. The 
 Use the destination based on the kind of material, not the transport that delivered it.
 
 - Put external source material in `raw/`.
+- Put Web Clipper captures that benefit from immediate visibility in `wiki/inbox-clips/`.
 - Put normalized personal reflections, dictated thoughts, and daily notes in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/`.
 - Put person-specific records in `wiki/crm/`.
 
 Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
+Web Clipper captures may land in `wiki/inbox-clips/` first and later be normalized into `raw/` or promoted into curated wiki pages.
 
 ## Naming
 
@@ -112,7 +116,7 @@ Do not copy large source texts into the wiki. Summarize and quote sparingly.
 
 When asked to ingest a source:
 
-1. Read the source from `raw/`.
+1. Read the source from `raw/` or `wiki/inbox-clips/`, depending on where it landed.
 2. Identify whether it is genuinely new, an update, or redundant.
 3. Create or update the source page in `wiki/sources/`.
 4. Update any affected topic, entity, overview, or synthesis pages.

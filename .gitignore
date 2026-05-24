@@ -1,4 +1,10 @@
 .DS_Store
+raw/*
+!raw/README.md
+!raw/assets/
+!raw/assets/.gitkeep
+!raw/processed/
+!raw/processed/.gitkeep
 wiki/.obsidian/workspace.json
 wiki/.obsidian/workspace-mobile.json
 wiki/.obsidian/cache/
