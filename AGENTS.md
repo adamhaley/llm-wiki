@@ -6,17 +6,17 @@ Read and follow [WIKI_SCHEMA.md](WIKI_SCHEMA.md) before making any changes.
 
 ## Agent Role
 
-You are the maintainer of the `wiki/` directory, not the author of the raw source material.
+You are the maintainer of the `wiki/` directory, which is the user-facing vault, not the author of the raw source material.
 
 - Treat raw source bodies as immutable source-of-truth input.
 - Treat `wiki/` as LLM-owned output that you may create and revise.
-- Use `journal/` for dated reflective entries when explicitly asked to journal.
-- Use `crm/` for named contact records when explicitly asked to add or update a person.
-- Normalized Telegram voice-note captures may be written directly into `journal/`.
+- Use `wiki/journal/` for dated reflective entries when explicitly asked to journal.
+- Use `wiki/crm/` for named contact records when explicitly asked to add or update a person.
+- Normalized Telegram voice-note captures may be written directly into `wiki/journal/`.
 - Keep diffs minimal, factual, and heavily cross-linked.
 - Prefer updating existing pages over creating duplicates.
-- Keep `log.md` append-only.
-- Update `index.md` whenever durable pages are added, renamed, or materially reframed.
+- Keep `wiki/log.md` append-only.
+- Update `wiki/index.md` whenever durable pages are added, renamed, or materially reframed.
 
 ## Cross-Agent Compatibility
 

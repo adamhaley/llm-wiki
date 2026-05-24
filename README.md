@@ -1,19 +1,18 @@
-# Brain
+# LLM Wiki
 
-This repository implements a local "LLM wiki" in the style described by Andrej Karpathy, using an Obsidian-friendly vault layout:
+This repository implements a local "LLM wiki" in the style described by Andrej Karpathy.
 
-- `raw/` holds newly clipped or imported source material.
-- `raw/processed/` holds source material after ingestion.
-- `wiki/` holds LLM-maintained markdown pages.
-- `journal/` holds dated journal entries.
-- `crm/` holds person records.
+- `raw/` holds source material for ingestion.
+- `wiki/` is the markdown wiki and the Obsidian vault.
 - `WIKI_SCHEMA.md` defines the operating rules for agentic maintenance.
+
+The repository root is agent-facing infrastructure. The Obsidian-visible knowledge base lives under `wiki/`.
 
 The intent is simple:
 
 1. Add source material to `raw/`.
 2. Ask an agent to ingest it into `wiki/`.
-3. Ask questions against the wiki and file useful answers back into it.
+3. Browse or edit the wiki in Obsidian by opening `wiki/` as the vault.
 4. Periodically lint and reconcile the wiki.
 
 Both Codex and Claude can use this repo:
@@ -25,27 +24,31 @@ Both Codex and Claude can use this repo:
 ## Directory Layout
 
 ```text
-index.md        root catalog for the vault
-log.md          append-only chronological activity log
+AGENTS.md
+CLAUDE.md
+WIKI_SCHEMA.md
 raw/
   processed/    source files after ingestion
   assets/       downloaded images and attachments referenced by sources
 wiki/
+  .obsidian/    Obsidian vault settings
+  index.md      vault catalog
+  log.md        append-only vault activity log
   overview.md   current top-level map of the knowledge base
   sources/      one page per ingested source
   topics/       concept and theme pages
   entities/     people, orgs, tools, places, etc.
   syntheses/    comparisons, query results, and higher-level analyses
   templates/    starter templates for common page types
-journal/        dated reflective entries
-crm/            contact records and relationship notes
+  journal/      dated reflective entries
+  crm/          contact records and relationship notes
 ```
 
 ## Suggested Workflow
 
 1. Put a new article, note, PDF, transcript, or markdown file directly in `raw/`.
-2. Ask the agent to ingest a specific source.
+2. Ask the agent to ingest a specific source into `wiki/`.
 3. Review the proposed or completed updates in `wiki/`.
 4. Move the source into `raw/processed/` once it has been ingested.
 
-If you use Obsidian, open this repository as a vault.
+If you use Obsidian, open `wiki/` as the vault, not the repository root.

@@ -4,8 +4,7 @@ This is the root catalog for the vault.
 
 ## Core
 
-- [Overview](wiki/overview.md): top-level map of the knowledge base, current scope, and open questions.
-- [Schema](WIKI_SCHEMA.md): shared operating contract for agents maintaining this vault.
+- [Overview](overview.md): top-level map of the knowledge base, current scope, and open questions.
 
 ## Wiki
 

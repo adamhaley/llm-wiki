@@ -13,3 +13,7 @@ Adjusted the scaffold to better match the Obsidian-friendly pattern described by
 ## [2026-05-23] policy | direct journal capture
 
 Updated the schema and agent instructions to allow normalized Telegram voice-note captures to write directly into `journal/`, while reserving `raw/` for external source material.
+
+## [2026-05-23] refactor | wiki as vault
+
+Moved the Obsidian vault boundary to `wiki/`, relocated `index.md`, `log.md`, `journal/`, `crm/`, and `.obsidian/` under `wiki/`, and updated the repo docs so the repository root remains agent-facing infrastructure.

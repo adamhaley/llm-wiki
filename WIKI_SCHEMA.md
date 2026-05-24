@@ -4,12 +4,11 @@ This file defines how agents should maintain this repository as a personal "LLM 
 
 ## Core Model
 
-There are four layers:
+There are three layers:
 
 1. `raw/`: source material awaiting or after ingestion.
-2. `wiki/`: LLM-maintained markdown pages derived from the sources.
-3. `journal/` and `crm/`: optional but first-class vault extensions.
-4. `WIKI_SCHEMA.md`: the maintenance contract for ingestion, querying, and linting.
+2. `wiki/`: the Obsidian vault and LLM-maintained markdown knowledge base.
+3. `WIKI_SCHEMA.md`: the maintenance contract for ingestion, querying, and linting.
 
 The goal is not to re-read every raw source from scratch on every question. The goal is to incrementally compile source material into a persistent, interlinked markdown wiki.
 
@@ -23,11 +22,6 @@ The goal is not to re-read every raw source from scratch on every question. The 
 
 ## Directory Conventions
 
-### Root files
-
-- `index.md`: vault catalog and starting point for navigation.
-- `log.md`: append-only chronological operations log.
-
 ### `raw/`
 
 - `raw/`: newly dropped source material awaiting ingest.
@@ -36,28 +30,28 @@ The goal is not to re-read every raw source from scratch on every question. The 
 
 ### `wiki/`
 
+- `wiki/.obsidian/`: vault-local Obsidian settings.
+- `wiki/index.md`: vault catalog and starting point for navigation.
+- `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
 - `wiki/sources/`: one page per source with provenance and extracted takeaways.
 - `wiki/topics/`: concept, theme, or subject pages.
 - `wiki/entities/`: named entities such as people, companies, places, or tools.
 - `wiki/syntheses/`: comparisons, decision memos, query outputs worth preserving.
 - `wiki/templates/`: starter templates only.
-
-### Optional extensions
-
-- `journal/`: dated notes grounded in the wiki and past entries.
-- `crm/`: person records and relationship context.
+- `wiki/journal/`: dated notes grounded in the wiki and past entries.
+- `wiki/crm/`: person records and relationship context.
 
 ## Capture Policy
 
 Use the destination based on the kind of material, not the transport that delivered it.
 
 - Put external source material in `raw/`.
-- Put normalized personal reflections, dictated thoughts, and daily notes in `journal/`.
+- Put normalized personal reflections, dictated thoughts, and daily notes in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/`.
-- Put person-specific records in `crm/`.
+- Put person-specific records in `wiki/crm/`.
 
-Telegram voice notes may go directly into `journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
+Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
 
 ## Naming
 
@@ -123,8 +117,8 @@ When asked to ingest a source:
 3. Create or update the source page in `wiki/sources/`.
 4. Update any affected topic, entity, overview, or synthesis pages.
 5. Add or revise cross-links.
-6. Update `index.md`.
-7. Append an entry to `log.md`.
+6. Update `wiki/index.md`.
+7. Append an entry to `wiki/log.md`.
 8. Move the processed source into `raw/processed/` unless the user wants it left in place.
 
 Default ingest posture:
@@ -137,11 +131,11 @@ Default ingest posture:
 
 When asked a substantive question:
 
-1. Read `index.md` first.
+1. Read `wiki/index.md` first.
 2. Read the most relevant linked pages in `wiki/`.
 3. Synthesize an answer from the wiki, citing the pages used.
 4. If the answer creates durable value, offer or perform filing it into `wiki/syntheses/`.
-5. Append to `log.md` only if the query materially changed the vault.
+5. Append to `wiki/log.md` only if the query materially changed the vault.
 
 ## Journal Workflow
 
@@ -151,8 +145,8 @@ When asked to create or update a journal entry:
 2. Preserve the user's voice and intent when the entry originated from dictation.
 3. Add light provenance when useful, such as `source: telegram-voice`.
 4. Link to relevant wiki or CRM pages when the connection is durable.
-5. Update `index.md` only if the journal structure itself changed materially.
-6. Append to `log.md` if the change was an intentional vault maintenance action rather than a routine automated capture.
+5. Update `wiki/index.md` only if the journal structure itself changed materially.
+6. Append to `wiki/log.md` if the change was an intentional vault maintenance action rather than a routine automated capture.
 
 ## Lint Workflow
 
@@ -182,7 +176,7 @@ Prefer producing concrete fixes, not only observations.
 
 Any change that creates or materially changes a durable wiki page should also update:
 
-1. `index.md`
-2. `log.md`
+1. `wiki/index.md`
+2. `wiki/log.md`
 
 Do not leave those behind.
