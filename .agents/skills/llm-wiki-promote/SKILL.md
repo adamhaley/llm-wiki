@@ -1,6 +1,6 @@
 # LLM Wiki Promote
 
-Use this skill when promoting durable ideas from journal entries, source pages, or existing wiki notes into canonical topic, entity, CRM, or synthesis pages.
+Use this skill when promoting durable ideas from journal entries, source pages, or existing wiki notes into canonical topic hubs, supporting pages, entity, CRM, or synthesis pages.
 
 ## Workflow
 
@@ -15,7 +15,8 @@ python3 scripts/wiki_tool.py orphan-notes
 
 3. Review the most relevant journal or wiki notes.
 4. Promote only durable ideas:
-   - recurring concepts -> `wiki/topics/`
+   - recurring canonical concepts -> `wiki/topics/`
+   - supporting durable notes -> `wiki/pages/`
    - people/orgs/tools -> `wiki/entities/`
    - relationship-specific people -> `wiki/crm/`
    - multi-note summaries -> `wiki/syntheses/`

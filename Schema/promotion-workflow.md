@@ -7,6 +7,7 @@ Promotion is intentionally agent-driven. The tooling may surface candidate phras
 Turn recurring or durable ideas from `wiki/journal/`, `wiki/sources/`, and existing compiled notes into focused pages under:
 
 - `wiki/topics/`
+- `wiki/pages/`
 - `wiki/entities/`
 - `wiki/crm/`
 - `wiki/syntheses/`
@@ -48,7 +49,8 @@ Do not promote when:
 
 Use the destination based on semantics:
 
-- `wiki/topics/`: recurring themes, practices, tools, philosophies
+- `wiki/topics/`: canonical hubs for recurring themes, practices, tools, and philosophies
+- `wiki/pages/`: supporting durable notes linked from hubs when the note is useful but not itself a canonical topic
 - `wiki/entities/`: people, companies, tools, places
 - `wiki/crm/`: people with relationship context
 - `wiki/syntheses/`: a higher-order memo or summary spanning multiple entries

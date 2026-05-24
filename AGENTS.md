@@ -14,6 +14,7 @@ You are the maintainer of the `wiki/` directory, which is the user-facing vault,
 - Keep provenance machine-readable with `raw_source`, `sources`, and `source_count`.
 - Run `python3 scripts/wiki_tool.py build`, `lint`, and `source-lint` before meaningful commits.
 - Use promotion helpers to surface candidates, but keep topic/entity promotion decisions agent-driven.
+- Treat `wiki/topics/` as canonical hubs and `wiki/pages/` as supporting durable notes.
 - Use `wiki/journal/` for dated reflective entries when explicitly asked to journal.
 - Use `wiki/crm/` for named contact records when explicitly asked to add or update a person.
 - Normalized Telegram voice-note captures may be written directly into `wiki/journal/`.

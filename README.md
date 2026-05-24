@@ -67,7 +67,8 @@ wiki/
   log.md         append-only vault activity log
   overview.md    current top-level map of the knowledge base
   sources/       one page per ingested source
-  topics/        concept and theme pages
+  topics/        canonical topic hubs
+  pages/         supporting durable pages linked from topics
   entities/      people, orgs, tools, places, etc.
   syntheses/     comparisons, query results, and higher-level analyses
   templates/     starter templates for common page types

@@ -48,9 +48,10 @@ python3 scripts/wiki_tool.py orphan-notes
 2. Review the suggested names and phrases as prompts, not decisions.
 3. Choose only durable concepts, people, projects, or syntheses worth keeping.
 4. Create or update canonical notes in `wiki/topics/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-5. Add explicit links back from relevant journal entries or durable notes where useful.
-6. Keep provenance factual. Journal-only promotions may cite the journal note paths in the body while leaving `sources` empty unless a raw source also supports the claim.
-7. Run:
+5. Use `wiki/pages/` for supporting durable notes that belong under a topic hub rather than acting as peer topics.
+6. Add explicit links back from relevant journal entries or durable notes where useful.
+7. Keep provenance factual. Journal-only promotions may cite the journal note paths in the body while leaving `sources` empty unless a raw source also supports the claim.
+8. Run:
 
 ```bash
 python3 scripts/wiki_tool.py build

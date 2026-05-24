@@ -38,7 +38,8 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
 - `wiki/sources/`: one page per source with provenance and extracted takeaways.
-- `wiki/topics/`: concept, theme, or subject pages.
+- `wiki/topics/`: canonical topic hubs for concepts, themes, or subject areas.
+- `wiki/pages/`: general durable pages that support or elaborate on canonical topics without necessarily being topic hubs themselves.
 - `wiki/entities/`: named entities such as people, companies, places, or tools.
 - `wiki/syntheses/`: comparisons, decision memos, query outputs worth preserving.
 - `wiki/templates/`: starter templates only.
@@ -138,7 +139,7 @@ tags:
 ---
 ```
 
-Compiled durable notes in `wiki/topics/`, `wiki/entities/`, `wiki/syntheses/`, and `wiki/crm/` should include:
+Compiled durable notes in `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, and `wiki/crm/` should include:
 
 ```yaml
 ---
@@ -210,14 +211,15 @@ When asked to promote ideas from journal or source material into durable wiki pa
    - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
    - `python3 scripts/wiki_tool.py orphan-notes`
 2. Treat these outputs as candidate prompts, not automatic truth.
-3. Decide whether the material belongs in `wiki/topics/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-4. Prefer updating an existing canonical page over creating a new one.
-5. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
-6. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
-7. Run `python3 scripts/wiki_tool.py build`.
-8. Run `python3 scripts/wiki_tool.py lint`.
-9. Run `python3 scripts/audit_public.py`.
-10. Append to `wiki/log.md` if the promotion materially changed the vault.
+3. Decide whether the material belongs in `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+4. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for supporting durable pages linked from those hubs.
+5. Prefer updating an existing canonical page over creating a new one.
+6. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
+7. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
+8. Run `python3 scripts/wiki_tool.py build`.
+9. Run `python3 scripts/wiki_tool.py lint`.
+10. Run `python3 scripts/audit_public.py`.
+11. Append to `wiki/log.md` if the promotion materially changed the vault.
 
 ## Lint Workflow
 

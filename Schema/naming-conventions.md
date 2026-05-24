@@ -10,7 +10,8 @@ Directory intent:
 
 - `raw/`: external source material not visible in the Obsidian vault
 - `wiki/sources/`: source summaries and provenance pages
-- `wiki/topics/`: durable concept or theme notes
+- `wiki/topics/`: canonical topic hubs
+- `wiki/pages/`: supporting durable pages related to canonical topics
 - `wiki/entities/`: people, orgs, places, tools
 - `wiki/syntheses/`: comparisons, decisions, query outputs worth keeping
 - `wiki/crm/`: named contact records

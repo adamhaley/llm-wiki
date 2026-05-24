@@ -28,6 +28,7 @@ TODAY = date.today().isoformat()
 CATALOG_DIRS = {
     "sources": "source",
     "topics": "topic",
+    "pages": "page",
     "entities": "entity",
     "syntheses": "synthesis",
     "crm": "crm",
@@ -36,6 +37,7 @@ CATALOG_DIRS = {
 SECTION_LABELS = {
     "sources": "Sources",
     "topics": "Topics",
+    "pages": "Pages",
     "entities": "Entities",
     "syntheses": "Syntheses",
     "crm": "CRM",
@@ -45,12 +47,13 @@ SECTION_LABELS = {
 EMPTY_MESSAGES = {
     "sources": "No source pages yet.",
     "topics": "No topic pages yet.",
+    "pages": "No page notes yet.",
     "entities": "No entity pages yet.",
     "syntheses": "No synthesis pages yet.",
     "crm": "No CRM pages yet.",
     "journal": "No journal pages yet.",
 }
-STRICT_NOTE_TYPES = {"source", "topic", "entity", "synthesis", "crm"}
+STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm"}
 ALLOWED_TYPES = set(CATALOG_DIRS.values())
 SKIP_FILENAMES = {"README.md", "index.md"}
 STOPWORDS = {
@@ -65,7 +68,7 @@ STOPWORDS = {
     "went", "were", "what", "when", "which", "while", "with", "would", "yesterday", "you",
     "your",
 }
-PROMOTION_NOTE_TYPES = {"journal", "topic", "entity", "synthesis", "crm", "source"}
+PROMOTION_NOTE_TYPES = {"journal", "topic", "page", "entity", "synthesis", "crm", "source"}
 
 
 class WikiError(Exception):
@@ -511,6 +514,7 @@ def build_root_index(notes: list[Note]) -> None:
     ordered_sections = [
         ("sources", SECTION_LABELS["sources"]),
         ("topics", SECTION_LABELS["topics"]),
+        ("pages", SECTION_LABELS["pages"]),
         ("entities", SECTION_LABELS["entities"]),
         ("syntheses", SECTION_LABELS["syntheses"]),
         ("crm", SECTION_LABELS["crm"]),
@@ -555,6 +559,7 @@ def command_doctor(_: argparse.Namespace) -> int:
         SCHEMA_DIR,
         WIKI_DIR / "sources",
         WIKI_DIR / "topics",
+        WIKI_DIR / "pages",
         WIKI_DIR / "entities",
         WIKI_DIR / "syntheses",
         WIKI_DIR / "crm",
@@ -612,7 +617,7 @@ def command_lint(_: argparse.Namespace) -> int:
                 errors.append(f"{note.rel_path}: source notes require `raw_source`")
             elif not validate_source_path(raw_source.strip()):
                 errors.append(f"{note.rel_path}: raw_source does not exist: {raw_source}")
-        if note.note_type in {"topic", "entity", "synthesis", "crm"}:
+        if note.note_type in {"topic", "page", "entity", "synthesis", "crm"}:
             sources = normalize_sources(note.frontmatter.get("sources"))
             source_count = note.frontmatter.get("source_count")
             if not isinstance(source_count, int):

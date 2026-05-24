@@ -41,3 +41,19 @@ Added a canonical topic page for the practical second-brain workflow, including 
 ## [2026-05-24] tool | second brain boundary
 
 Expanded the Second Brain topic with the practical boundary between the deterministic tool layer and the meaning-oriented vault layer, including what is appropriate to automate versus keep human or agent in the loop.
+
+## [2026-05-24] tool | second brain sync behavior
+
+Expanded the Second Brain topic to clarify that scheduled pull automation is most useful during idle clean periods and should safely skip during active local editing or when the branch is ahead.
+
+## [2026-05-24] tool | second brain note cluster
+
+Split the large Second Brain topic into a hub note plus smaller glanceable notes for workflow, operating boundary, review rhythm, and sync behavior.
+
+## [2026-05-24] tool | pages note class
+
+Added wiki/pages as a general durable note area, clarified topics as canonical hubs, and moved Second Brain supporting notes from topics into pages.
+
+## [2026-05-24] tool | pages typing fix
+
+Corrected the Second Brain supporting notes under wiki/pages to use type page so canonical topics and supporting pages stay distinct in the catalog and indexes.
