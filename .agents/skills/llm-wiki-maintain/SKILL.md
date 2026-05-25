@@ -1,3 +1,8 @@
+---
+name: llm-wiki-maintain
+description: Use this skill for general upkeep of the wiki, including rebuilds, source coverage refreshes, metadata validation, and deterministic log maintenance.
+---
+
 # LLM Wiki Maintain
 
 Use this skill for general upkeep.

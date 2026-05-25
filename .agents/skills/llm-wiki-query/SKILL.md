@@ -1,3 +1,8 @@
+---
+name: llm-wiki-query
+description: Use this skill when answering questions from the existing wiki, prioritizing compiled notes before raw source material.
+---
+
 # LLM Wiki Query
 
 Use this skill when answering questions from the existing wiki.

@@ -1,3 +1,8 @@
+---
+name: llm-wiki-ingest
+description: Use this skill when ingesting new material from raw sources into the wiki while preserving provenance and updating affected durable notes.
+---
+
 # LLM Wiki Ingest
 
 Use this skill when ingesting new material from `raw/` into `wiki/`.

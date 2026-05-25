@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="/opt/homebrew/var/www/llm-wiki"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REMOTE="${1:-origin}"
 BRANCH="${2:-main}"
 LOG_FILE="${LOG_FILE:-/tmp/llm-wiki-sync.log}"

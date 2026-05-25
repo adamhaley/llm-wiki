@@ -1,3 +1,8 @@
+---
+name: llm-wiki-promote
+description: Use this skill when promoting durable ideas from journal entries, source pages, or existing wiki notes into canonical topic hubs, supporting pages, entity, CRM, or synthesis pages.
+---
+
 # LLM Wiki Promote
 
 Use this skill when promoting durable ideas from journal entries, source pages, or existing wiki notes into canonical topic hubs, supporting pages, entity, CRM, or synthesis pages.

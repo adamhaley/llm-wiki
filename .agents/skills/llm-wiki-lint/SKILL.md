@@ -1,3 +1,8 @@
+---
+name: llm-wiki-lint
+description: Use this skill when checking repository health before commit or after a larger ingest.
+---
+
 # LLM Wiki Lint
 
 Use this skill when checking repository health before commit or after a larger ingest.
