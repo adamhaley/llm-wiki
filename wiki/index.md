@@ -18,11 +18,14 @@ This is the root catalog for the vault.
 ### Topics
 
 - [Topics Index](topics/index.md)
+- [LLM Wiki](topics/llm-wiki.md): An LLM wiki is a compiled markdown knowledge layer that sits between raw captured material and future agent queries, with deterministic maintenance around indexing, provenance, and linting.
 - [Second Brain](topics/second-brain.md): A practical second-brain workflow keeps capture cheap, preserves raw material, and promotes only the ideas that become durable enough to deserve canonical wiki pages.
+- [Upwork](topics/upwork.md): Upwork became an early traction channel for Adam's AI automation work, moving from outbound proposal practice into first replies, a first paid workflow-translation gig, and the beginning of repeat client relationships.
 
 ### Pages
 
 - [Pages Index](pages/index.md)
+- [Claude Code Memory Systems](pages/claude-code-memory-systems.md): The recent clip cluster frames Claude Code memory as a stack of approaches rather than one tool, with the LLM wiki pattern serving as a higher-order compiled memory layer rather than a universal replacement for every other memory mechanism.
 - [Second Brain Operating Boundary](pages/second-brain-boundary.md): The system has a practical split between a deterministic tool layer and a meaning-oriented vault layer.
 - [Second Brain Review Rhythm](pages/second-brain-review-rhythm.md): The value of the system comes more from review cadence than from capture volume alone.
 - [Second Brain Sync Behavior](pages/second-brain-sync-behavior.md): Scheduled pull automation is most useful during idle periods, not active editing periods.

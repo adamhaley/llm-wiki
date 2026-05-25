@@ -61,3 +61,7 @@ Corrected the Second Brain supporting notes under wiki/pages to use type page so
 ## [2026-05-25] tool | synthesis prep workflow
 
 Added a stateful synthesis-prep report script, documented the report-driven review workflow, and ignored generated report/state artifacts so scheduled runs can stay deterministic without dirtying the repo.
+
+## [2026-05-25] promotion | first durable clusters
+
+Promoted the first synthesis-driven clusters into durable notes by adding canonical pages for LLM Wiki and Upwork plus a supporting page for Claude Code memory systems, and linked them back into the Second Brain hub.

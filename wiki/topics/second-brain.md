@@ -37,6 +37,12 @@ A practical second-brain workflow keeps capture cheap, preserves raw material, a
 - [Second Brain Review Rhythm](../pages/second-brain-review-rhythm.md): daily, weekly, and monthly review cadence plus promotion heuristics.
 - [Second Brain Sync Behavior](../pages/second-brain-sync-behavior.md): when scheduled pull helps and when it should safely skip.
 
+### Emerging Durable Topics
+
+- [LLM Wiki](llm-wiki.md): compiled markdown memory layer for agents and humans.
+- [Upwork](upwork.md): early client traction and proposal discipline as a live operating thread.
+- [Claude Code Memory Systems](../pages/claude-code-memory-systems.md): comparison page for the surrounding memory-system design space.
+
 ## Related Pages
 
 - [Overview](../overview.md)
@@ -45,6 +51,9 @@ A practical second-brain workflow keeps capture cheap, preserves raw material, a
 - [Second Brain Operating Boundary](../pages/second-brain-boundary.md)
 - [Second Brain Review Rhythm](../pages/second-brain-review-rhythm.md)
 - [Second Brain Sync Behavior](../pages/second-brain-sync-behavior.md)
+- [LLM Wiki](llm-wiki.md)
+- [Upwork](upwork.md)
+- [Claude Code Memory Systems](../pages/claude-code-memory-systems.md)
 - [Promotion Workflow](../../Schema/promotion-workflow.md)
 - [Journal](../journal/README.md)
 

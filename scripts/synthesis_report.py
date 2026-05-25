@@ -29,26 +29,202 @@ JOURNAL_DIR = WIKI_DIR / "journal"
 INBOX_CLIPS_DIR = WIKI_DIR / "inbox-clips"
 SKIP_FILENAMES = {"README.md", "index.md"}
 ANALYSIS_STOPWORDS = {
+    "a",
+    "about",
+    "actually",
+    "after",
+    "again",
+    "all",
+    "also",
+    "am",
+    "an",
+    "and",
+    "any",
+    "are",
+    "as",
+    "at",
+    "back",
+    "basically",
+    "be",
+    "because",
+    "been",
+    "before",
+    "being",
+    "better",
+    "but",
+    "by",
+    "can",
+    "com",
+    "could",
+    "did",
+    "do",
+    "does",
+    "don't",
+    "down",
+    "even",
+    "every",
+    "everything",
+    "feel",
+    "first",
+    "for",
+    "from",
+    "get",
+    "going",
+    "good",
+    "got",
+    "great",
+    "gonna",
+    "had",
+    "have",
+    "having",
+    "he",
+    "here",
+    "how",
     "http",
     "https",
-    "www",
-    "com",
-    "watch",
-    "youtube",
-    "transcript",
-    "okay",
-    "yeah",
-    "gonna",
-    "wanna",
-    "just",
-    "that",
-    "this",
-    "have",
-    "it's",
-    "im",
+    "i",
+    "i'd",
+    "i'll",
     "i'm",
-    "lets",
+    "i've",
+    "if",
+    "im",
+    "in",
+    "into",
+    "is",
+    "it",
+    "it's",
+    "its",
+    "just",
+    "kind",
+    "know",
     "let",
+    "lets",
+    "like",
+    "lot",
+    "made",
+    "make",
+    "maybe",
+    "more",
+    "most",
+    "much",
+    "my",
+    "need",
+    "new",
+    "no",
+    "not",
+    "now",
+    "of",
+    "okay",
+    "on",
+    "one",
+    "or",
+    "our",
+    "out",
+    "over",
+    "really",
+    "right",
+    "same",
+    "so",
+    "some",
+    "something",
+    "still",
+    "than",
+    "that",
+    "the",
+    "their",
+    "them",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "through",
+    "time",
+    "today",
+    "to",
+    "transcript",
+    "up",
+    "use",
+    "using",
+    "very",
+    "wanna",
+    "was",
+    "watch",
+    "we",
+    "went",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "while",
+    "with",
+    "work",
+    "worked",
+    "working",
+    "would",
+    "www",
+    "year",
+    "yeah",
+    "yesterday",
+    "you",
+    "your",
+    "youtube",
+    "we're",
+    "let's",
+    "pm",
+    "am",
+}
+MEANINGFUL_SHORT_TOKENS = {
+    "ai",
+    "api",
+    "bot",
+    "cli",
+    "crm",
+    "git",
+    "job",
+    "kb",
+    "llm",
+    "mcp",
+    "n8n",
+    "rag",
+    "sms",
+    "ui",
+}
+NAME_EXCLUSIONS = {
+    "Good Morning",
+    "Los Angeles",
+    "Memorial Day",
+    "PM Today",
+    "Today",
+    "This",
+}
+LOW_SIGNAL_PHRASES = {
+    "all the",
+    "and the",
+    "and then",
+    "and you",
+    "for the",
+    "from the",
+    "in the",
+    "it is",
+    "journal entry",
+    "let's take",
+    "link the description",
+    "los angeles",
+    "of the",
+    "on the",
+    "out the",
+    "second brain",
+    "the way",
+    "today's weather",
+    "today's weather los",
+    "take look",
+    "weather los angeles",
+    "with the",
+    "clear skies",
 }
 
 
@@ -129,18 +305,41 @@ def load_changed_items(state: dict[str, Any]) -> tuple[list[ChangedItem], dict[s
     return changed, current_hashes
 
 
+def token_is_meaningful(token: str) -> bool:
+    lowered = token.lower()
+    if lowered in ANALYSIS_STOPWORDS:
+        return False
+    if lowered in MEANINGFUL_SHORT_TOKENS:
+        return True
+    if any(char.isdigit() for char in lowered) and len(lowered) >= 3:
+        return True
+    return len(lowered) >= 4
+
+
+def phrase_is_meaningful(words: list[str]) -> bool:
+    phrase = " ".join(words)
+    if phrase in LOW_SIGNAL_PHRASES:
+        return False
+    if len(set(words)) < len(words):
+        return False
+    meaningful = [word for word in words if token_is_meaningful(word)]
+    return len(meaningful) >= 2
+
+
 def report_name_candidates(items: list[ChangedItem], min_count: int, limit: int) -> list[dict[str, Any]]:
     hits: dict[str, set[str]] = defaultdict(set)
-    pattern = re.compile(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b")
+    pattern = re.compile(r"\b([A-Z][a-zA-Z0-9]+(?: [A-Z][a-zA-Z0-9]+){0,2})\b")
     for item in items:
-        text = sanitize_analysis_text(note_body(item.path))
+        text = f"{item.title}\n{sanitize_analysis_text(note_body(item.path))}"
         seen: set[str] = set()
         for match in pattern.findall(text):
             candidate = match.strip()
-            lowered = candidate.lower()
-            if lowered in ANALYSIS_STOPWORDS:
+            if candidate in NAME_EXCLUSIONS:
                 continue
-            if candidate in {"Los Angeles", "Today", "Good Morning"}:
+            parts = candidate.split()
+            if any(part.lower() in ANALYSIS_STOPWORDS for part in parts):
+                continue
+            if len(parts) == 1 and not token_is_meaningful(parts[0]):
                 continue
             if candidate in seen:
                 continue
@@ -165,9 +364,9 @@ def report_phrase_candidates(items: list[ChangedItem], min_count: int, limit: in
                 continue
             for index in range(len(words) - length + 1):
                 phrase_words = words[index:index + length]
-                if any(word in ANALYSIS_STOPWORDS for word in phrase_words):
-                    continue
                 phrase = " ".join(phrase_words)
+                if not phrase_is_meaningful(phrase_words):
+                    continue
                 if phrase in seen:
                     continue
                 seen.add(phrase)
@@ -185,9 +384,7 @@ def top_keywords(text: str, limit: int = 8) -> list[str]:
     counts: dict[str, int] = defaultdict(int)
     for word in clean_words(sanitize_analysis_text(text)):
         token = word.lower()
-        if len(token) < 4:
-            continue
-        if token in ANALYSIS_STOPWORDS:
+        if not token_is_meaningful(token):
             continue
         counts[token] += 1
     ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
