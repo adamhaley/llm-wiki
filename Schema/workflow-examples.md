@@ -75,5 +75,9 @@ python3 scripts/synthesis_report.py
    - repeated phrases
    - potential cross-note connections
    - orphan durable notes
-4. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-5. Keep the report as a review aid, not as a substitute for canonical notes.
+4. Audit the report quality:
+   - are the top candidates useful or mostly junk?
+   - did it miss any obvious recurring topic?
+   - is tuning `scripts/synthesis_report.py` more valuable than promoting from this run?
+5. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+6. Keep the report as a review aid, not as a substitute for canonical notes.

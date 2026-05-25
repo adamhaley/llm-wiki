@@ -233,8 +233,13 @@ When you want a deterministic review brief before doing higher-judgment synthesi
    - repeated names and phrases
    - possible cross-note connections
    - orphan durable notes
-4. Treat the report as synthesis input, not as a substitute for human or agent judgment.
-5. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+4. Audit the report quality before trusting it:
+   - are the surfaced names and phrases materially useful?
+   - is the output dominated by filler, transcript boilerplate, or weather-style repetition?
+   - did it miss any obvious recurring topic, entity, or connection?
+5. If the report is structurally noisy or repeatedly misses clear patterns, prefer tuning `scripts/synthesis_report.py` before doing large-scale promotion.
+6. Treat the report as synthesis input, not as a substitute for human or agent judgment.
+7. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
 
 ## Lint Workflow
 

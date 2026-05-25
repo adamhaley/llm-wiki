@@ -65,3 +65,7 @@ Added a stateful synthesis-prep report script, documented the report-driven revi
 ## [2026-05-25] promotion | first durable clusters
 
 Promoted the first synthesis-driven clusters into durable notes by adding canonical pages for LLM Wiki and Upwork plus a supporting page for Claude Code memory systems, and linked them back into the Second Brain hub.
+
+## [2026-05-25] policy | synthesis report quality audit
+
+Clarified that future synthesis passes should audit report quality first and tune the deterministic report heuristics when the output becomes structurally noisy or misses obvious recurring patterns.
