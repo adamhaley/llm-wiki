@@ -58,3 +58,22 @@ python3 scripts/wiki_tool.py build
 python3 scripts/wiki_tool.py lint
 python3 scripts/audit_public.py
 ```
+
+## Generate A Synthesis Review Brief
+
+1. Run:
+
+```bash
+python3 scripts/synthesis_report.py
+```
+
+2. Open the newest file under `wiki/pages/reports/`.
+3. Review:
+   - new journal entries
+   - new inbox clips
+   - repeated names
+   - repeated phrases
+   - potential cross-note connections
+   - orphan durable notes
+4. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+5. Keep the report as a review aid, not as a substitute for canonical notes.

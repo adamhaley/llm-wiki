@@ -1,4 +1,6 @@
 .DS_Store
+scripts/__pycache__/
+scripts/state.json
 raw/*
 !raw/README.md
 !raw/assets/
@@ -14,3 +16,4 @@ wiki/.obsidian/data.json
 wiki/.obsidian/appearance.json
 wiki/.obsidian/graph.json
 wiki/.obsidian/themes/
+wiki/pages/reports/synthesis-report-*.md

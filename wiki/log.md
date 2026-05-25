@@ -57,3 +57,7 @@ Added wiki/pages as a general durable note area, clarified topics as canonical h
 ## [2026-05-24] tool | pages typing fix
 
 Corrected the Second Brain supporting notes under wiki/pages to use type page so canonical topics and supporting pages stay distinct in the catalog and indexes.
+
+## [2026-05-25] tool | synthesis prep workflow
+
+Added a stateful synthesis-prep report script, documented the report-driven review workflow, and ignored generated report/state artifacts so scheduled runs can stay deterministic without dirtying the repo.

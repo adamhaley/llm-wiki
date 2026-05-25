@@ -1,6 +1,6 @@
 # Journal Index
 
-Generated on 2026-05-24.
+Generated on 2026-05-25.
 
 - [2025 05 24](2025-05-24.md): Wow, I just turned 50 yesterday. I don't feel any different. The sky is overcast today, and I'm feeling a little queasy, so I'm just hanging out in bed and working on end-to-end workflows.
 - [2025 05 25](2025-05-25.md): This is a journal entry, May 25th, 2025. Things are moving so fast with AI and I am actually doing a really good job of keeping up.
@@ -36,3 +36,4 @@ Generated on 2026-05-24.
 - [2025 07 30](2025-07-30.md): So I closed out my first week on Upwork with $230 made. A humble start, but hopefully the start of something big. I have two clients in total so far. Marcus Dan in Europe and Brandon in the United States. I don't know exactly where he is. Marcus Dan, the relationship is going great so far. He's very easy to work with. Great client. And Brandon we shall see. I started him late in the week and haven't heard back yet.
 - [2026 03 07](2026-03-07.md): Started a new job at LeaseCake on March 2nd.
 - [2026 05 24](2026-05-24.md): 2:10 PM
+- [2026 05 25](2026-05-25.md): A short session here on Memorial Day at Lancashire WeWork to go on the next step of the second brain, and I added the Obsidian web clipper. And also changed the theme on Obsidian.

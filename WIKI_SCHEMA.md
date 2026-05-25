@@ -221,6 +221,21 @@ When asked to promote ideas from journal or source material into durable wiki pa
 10. Run `python3 scripts/audit_public.py`.
 11. Append to `wiki/log.md` if the promotion materially changed the vault.
 
+## Synthesis Prep Workflow
+
+When you want a deterministic review brief before doing higher-judgment synthesis work:
+
+1. Run `python3 scripts/synthesis_report.py`.
+2. Open the newest report under `wiki/pages/reports/`.
+3. Review:
+   - new or changed journal entries
+   - new or changed inbox clips
+   - repeated names and phrases
+   - possible cross-note connections
+   - orphan durable notes
+4. Treat the report as synthesis input, not as a substitute for human or agent judgment.
+5. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+
 ## Lint Workflow
 
 When asked to lint or health-check the wiki, look for:
@@ -253,6 +268,7 @@ Useful non-mutating promotion helpers:
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
+python3 scripts/synthesis_report.py --dry-run
 ```
 
 ## Writing Style
