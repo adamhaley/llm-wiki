@@ -7,6 +7,7 @@ REMOTE="${1:-origin}"
 BRANCH="${2:-main}"
 LOG_FILE="${LOG_FILE:-/tmp/llm-wiki-sync.log}"
 LOCK_DIR="${LOCK_DIR:-/tmp/llm-wiki-sync.lock}"
+PID_FILE="$LOCK_DIR/pid"
 
 timestamp() {
   date "+%Y-%m-%d %H:%M:%S"
@@ -17,13 +18,28 @@ log() {
 }
 
 cleanup() {
+  rm -f "$PID_FILE" >/dev/null 2>&1 || true
   rmdir "$LOCK_DIR" >/dev/null 2>&1 || true
 }
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  log "skip: another sync process is already running"
-  exit 0
+  if [[ -f "$PID_FILE" ]]; then
+    STALE_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
+    if [[ -n "$STALE_PID" ]] && kill -0 "$STALE_PID" 2>/dev/null; then
+      log "skip: another sync process is already running"
+      exit 0
+    fi
+  fi
+  rm -f "$PID_FILE" >/dev/null 2>&1 || true
+  if rmdir "$LOCK_DIR" 2>/dev/null && mkdir "$LOCK_DIR" 2>/dev/null; then
+    log "info: cleared stale sync lock"
+  else
+    log "skip: unable to clear stale sync lock"
+    exit 0
+  fi
 fi
+
+printf "%s\n" "$$" >"$PID_FILE"
 
 trap cleanup EXIT
 
