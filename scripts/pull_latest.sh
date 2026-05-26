@@ -8,6 +8,7 @@ BRANCH="${2:-main}"
 LOG_FILE="${LOG_FILE:-/tmp/llm-wiki-sync.log}"
 LOCK_DIR="${LOCK_DIR:-/tmp/llm-wiki-sync.lock}"
 PID_FILE="$LOCK_DIR/pid"
+EXCLUDED_PATHS=(':(exclude)wiki/.obsidian/**')
 
 timestamp() {
   date "+%Y-%m-%d %H:%M:%S"
@@ -20,6 +21,22 @@ log() {
 cleanup() {
   rm -f "$PID_FILE" >/dev/null 2>&1 || true
   rmdir "$LOCK_DIR" >/dev/null 2>&1 || true
+}
+
+has_meaningful_changes() {
+  if ! git diff --quiet -- . "${EXCLUDED_PATHS[@]}"; then
+    return 0
+  fi
+
+  if ! git diff --cached --quiet -- . "${EXCLUDED_PATHS[@]}"; then
+    return 0
+  fi
+
+  if [[ -n "$(git ls-files --others --exclude-standard -- . "${EXCLUDED_PATHS[@]}")" ]]; then
+    return 0
+  fi
+
+  return 1
 }
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -50,7 +67,7 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+if has_meaningful_changes; then
   log "skip: worktree is dirty; not pulling"
   exit 0
 fi
