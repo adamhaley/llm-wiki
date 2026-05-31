@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from wiki_tool import (
     ROOT,
@@ -431,6 +432,12 @@ def report_path(now: datetime) -> Path:
     return REPORTS_DIR / f"synthesis-report-{now.strftime('%Y-%m-%d-%H%M')}.md"
 
 
+def report_link(repo_rel_path: str) -> str:
+    wiki_rel_path = Path(repo_rel_path).relative_to("wiki")
+    report_rel_path = Path("../..") / wiki_rel_path
+    return quote(report_rel_path.as_posix(), safe="/")
+
+
 def render_report(
     changed: list[ChangedItem],
     name_candidates: list[Any],
@@ -465,7 +472,7 @@ def render_report(
     else:
         for item in journal_items:
             summary = item.summary or "No summary extracted."
-            lines.append(f"- [{item.title}]({Path(item.rel_path).relative_to('wiki').as_posix()}): {summary}")
+            lines.append(f"- [{item.title}]({report_link(item.rel_path)}): {summary}")
     lines.append("")
     lines.append("## New Or Changed Inbox Clips")
     lines.append("")
@@ -474,7 +481,7 @@ def render_report(
     else:
         for item in clip_items:
             summary = item.summary or "No summary extracted."
-            lines.append(f"- [{item.title}]({Path(item.rel_path).relative_to('wiki').as_posix()}): {summary}")
+            lines.append(f"- [{item.title}]({report_link(item.rel_path)}): {summary}")
 
     lines.extend(["", "## Candidate Names", ""])
     if not name_candidates:
@@ -507,8 +514,7 @@ def render_report(
         lines.append("- None")
     else:
         for row in orphans:
-            path = Path(row["path"]).relative_to("wiki").as_posix()
-            lines.append(f"- [{row['title']}]({path}) (`{row['type']}`)")
+            lines.append(f"- [{row['title']}]({report_link(row['path'])}) (`{row['type']}`)")
 
     lines.extend(
         [
