@@ -7,16 +7,18 @@ This repository implements a local "LLM wiki" in the style described by Andrej K
 - `WIKI_SCHEMA.md` defines the operating rules for agentic maintenance.
 - `scripts/wiki_tool.py` provides deterministic build, lint, and source coverage checks.
 
-The repository root is agent-facing infrastructure. The Obsidian-visible knowledge base lives under `wiki/`.
+The repository root is agent-facing infrastructure and versioned system behavior.
+The Obsidian-visible knowledge base lives under `wiki/`, but the vault content is intended to sync via Obsidian Sync rather than git.
 `raw/` is intentionally noisy and is git-ignored except for its tracked skeleton files.
-This differs intentionally from some in-vault LLM wiki setups: raw source files stay outside the Obsidian vault, while provenance stays machine-readable inside wiki note frontmatter and the generated source manifest.
+Most note content under `wiki/` should also remain git-ignored by default, with the repo tracking only schemas, scripts, agent instructions, templates, and a small amount of vault configuration.
 
 The intent is simple:
 
 1. Add source material to `raw/`.
 2. Ask an agent to ingest it into `wiki/`.
 3. Browse or edit the wiki in Obsidian by opening `wiki/` as the vault.
-4. Periodically lint and reconcile the wiki.
+4. Let Obsidian Sync handle live content sync across devices.
+5. Use git to version the maintenance layer that drives the vault, not the vault's day-to-day content.
 
 Both Codex and Claude can use this repo:
 
@@ -37,7 +39,7 @@ python3 scripts/wiki_tool.py source-lint
 python3 scripts/audit_public.py
 ```
 
-Generated artifacts:
+Local generated artifacts:
 
 - `wiki/catalog.jsonl`
 - `wiki/index.md`
@@ -61,17 +63,17 @@ raw/
   processed/     source files after ingestion
   assets/        downloaded images and attachments referenced by sources
 wiki/
-  .obsidian/     Obsidian vault settings
+  .obsidian/     vault settings; only stable shared config is tracked
   inbox-clips/   Obsidian-visible landing zone for Web Clipper captures
-  index.md       vault catalog
-  log.md         append-only vault activity log
-  overview.md    current top-level map of the knowledge base
+  index.md       local vault catalog, typically not tracked
+  log.md         local append-only vault activity log, typically not tracked
+  overview.md    local top-level map of the knowledge base
   sources/       one page per ingested source
   topics/        canonical topic hubs
   pages/         supporting durable pages linked from topics
   entities/      people, orgs, tools, places, etc.
   syntheses/     comparisons, query results, and higher-level analyses
-  templates/     starter templates for common page types
+  templates/     starter templates that remain tracked
   journal/       dated reflective entries
   crm/           contact records and relationship notes
 ```
@@ -84,5 +86,12 @@ wiki/
 4. Move or normalize useful clipped content from `wiki/inbox-clips/` into `raw/` or directly into the wiki, depending on the workflow.
 5. Review the proposed or completed updates in `wiki/`.
 6. Move the source into `raw/processed/` once it has been ingested when you want to retain a processed raw record.
+
+## Sync Boundary
+
+- Obsidian Sync is the live sync system for vault content.
+- Git is for versioning system code: scripts, schemas, agent instructions, templates, and selected vault configuration.
+- Do not treat git as a second live sync path for the active vault content tree.
+- If you intentionally want content snapshots in git, do that as a deliberate archival workflow rather than as the default operating mode.
 
 If you use Obsidian, open `wiki/` as the vault, not the repository root.

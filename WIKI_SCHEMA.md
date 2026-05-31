@@ -7,8 +7,8 @@ This file defines how agents should maintain this repository as a personal "LLM 
 There are three layers:
 
 1. `raw/`: source material awaiting or after ingestion.
-2. `wiki/`: the Obsidian vault and LLM-maintained markdown knowledge base.
-3. `WIKI_SCHEMA.md`: the maintenance contract for ingestion, querying, and linting.
+2. `wiki/`: the local Obsidian vault and LLM-maintained markdown knowledge base.
+3. `WIKI_SCHEMA.md`: the maintenance contract for ingestion, querying, linting, and the repo-versus-vault boundary.
 
 The goal is not to re-read every raw source from scratch on every question. The goal is to incrementally compile source material into a persistent, interlinked markdown wiki.
 
@@ -18,6 +18,9 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - The agent reads `raw/` and maintains `wiki/`.
 - Raw source bodies are immutable. Do not edit them in place.
 - `wiki/` is editable. Prefer incremental edits over wholesale rewrites.
+- Git is for versioned maintenance behavior such as scripts, schemas, agent instructions, templates, and selected shared vault configuration.
+- Obsidian Sync or another vault-native transport should be the primary live sync path for note content when the vault is used across devices.
+- Durable note content under `wiki/` may be git-ignored by default.
 - The index and log are mandatory maintenance files.
 - The deterministic toolchain lives in `scripts/wiki_tool.py` and `scripts/audit_public.py`.
 
@@ -46,6 +49,7 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - `wiki/journal/`: dated notes grounded in the wiki and past entries.
 - `wiki/crm/`: person records and relationship context.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
+- Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
 
 ### `Schema/`
 
@@ -64,6 +68,13 @@ Use the destination based on the kind of material, not the transport that delive
 
 Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
 Web Clipper captures may land in `wiki/inbox-clips/` first and later be normalized into `raw/` or promoted into curated wiki pages.
+
+## Sync Boundary
+
+- Treat Obsidian Sync as the live sync system for note content when available.
+- Treat git as the versioned system layer, not as a second bidirectional sync engine for the active vault.
+- If git-based automation needs a clean worktree, prefer a separate clean clone rather than operating inside the active synced vault.
+- Content snapshots in git should be deliberate archival actions, not the default transport.
 
 ## Naming
 
@@ -293,4 +304,6 @@ Any change that creates or materially changes a durable wiki page should also up
 3. `wiki/catalog.jsonl`
 4. `Schema/source-manifest.jsonl` when raw coverage changed
 
-Do not leave those behind.
+Do not leave those behind in the local vault state.
+
+When the repository is operating in system-code mode, those files may still be intentionally absent from git history or pending removal from tracking. The maintenance requirement is about local vault coherence, not automatic inclusion in commits.
