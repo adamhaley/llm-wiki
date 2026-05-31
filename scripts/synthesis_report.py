@@ -529,6 +529,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate a synthesis-prep report")
     parser.add_argument("--dry-run", action="store_true", help="Print report instead of writing it")
     parser.add_argument("--no-state-update", action="store_true", help="Do not update scripts/state.json")
+    parser.add_argument("--skip-empty", action="store_true", help="Do not write a report when no journal entries or inbox clips changed")
     parser.add_argument("--limit", type=int, default=10, help="Max candidates per section")
     return parser.parse_args()
 
@@ -538,6 +539,10 @@ def main() -> int:
     now = datetime.now()
     state = read_state()
     changed, current_hashes = load_changed_items(state)
+
+    if args.skip_empty and not changed:
+        print("report_skipped=no_changed_items")
+        return 0
 
     name_candidates = report_name_candidates(changed, min_count=2, limit=args.limit)
     phrase_candidates = report_phrase_candidates(changed, min_count=2, limit=args.limit)
