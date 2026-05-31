@@ -4,7 +4,7 @@ Promotion is intentionally agent-driven. The tooling may surface candidate phras
 
 ## Goal
 
-Turn recurring or durable ideas from `wiki/journal/`, `wiki/sources/`, and existing compiled notes into focused pages under:
+Turn durably useful ideas from `wiki/journal/`, `wiki/sources/`, and existing compiled notes into focused pages under:
 
 - `wiki/topics/`
 - `wiki/pages/`
@@ -28,7 +28,7 @@ Interpretation:
 - `promotion-candidates --mode phrases` surfaces repeated multi-word phrases across notes.
 - `orphan-notes` surfaces compiled notes that currently have no inbound links from other compiled notes.
 
-These are candidate signals only. They are not reliable enough to create pages automatically.
+These are candidate signals only. They are not reliable enough to create pages automatically, and they are biased toward recurrence. Agents must also look for one-off material with high future utility.
 
 ## Agent Decision Rules
 
@@ -38,22 +38,26 @@ Promote when at least one of these is true:
 - the idea is likely to matter beyond a single day
 - the note would make future retrieval faster
 - the concept is easier to understand once separated from narrative journal context
+- the item is a one-off but reference-grade guide, command, architecture, paper, repository, or explanation
+- the item informs a current or likely future decision
+- the item is rare, hard-won, project-relevant, or likely to save rediscovery later
 
 Do not promote when:
 
 - the content is purely ephemeral mood or weather
 - the phrase is repeated but semantically weak
 - the note would become a one-line stub with no future value
+- the item is interesting but has no plausible retrieval, decision, project, or reference value
 
 ## Promotion Shapes
 
 Use the destination based on semantics:
 
-- `wiki/topics/`: canonical hubs for recurring themes, practices, tools, and philosophies
+- `wiki/topics/`: canonical hubs for durable themes, practices, tools, and philosophies; recurrence is helpful but not required when the topic is important
 - `wiki/pages/`: supporting durable notes linked from hubs when the note is useful but not itself a canonical topic
 - `wiki/entities/`: people, companies, tools, places
 - `wiki/crm/`: people with relationship context
-- `wiki/syntheses/`: a higher-order memo or summary spanning multiple entries
+- `wiki/syntheses/`: a higher-order memo, decision, comparison, or summary; it may span multiple entries or capture one high-leverage conclusion
 
 ## Linking Guidance
 

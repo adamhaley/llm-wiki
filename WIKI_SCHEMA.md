@@ -223,14 +223,15 @@ When asked to promote ideas from journal or source material into durable wiki pa
    - `python3 scripts/wiki_tool.py orphan-notes`
 2. Treat these outputs as candidate prompts, not automatic truth.
 3. Decide whether the material belongs in `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-4. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for supporting durable pages linked from those hubs.
-5. Prefer updating an existing canonical page over creating a new one.
-6. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
-7. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
-8. Run `python3 scripts/wiki_tool.py build`.
-9. Run `python3 scripts/wiki_tool.py lint`.
-10. Run `python3 scripts/audit_public.py`.
-11. Append to `wiki/log.md` if the promotion materially changed the vault.
+4. Promote based on durable future utility, not only repetition. A one-off source, clip, or journal insight can deserve promotion when it is reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later.
+5. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for supporting durable pages linked from those hubs.
+6. Prefer updating an existing canonical page over creating a new one.
+7. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
+8. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
+9. Run `python3 scripts/wiki_tool.py build`.
+10. Run `python3 scripts/wiki_tool.py lint`.
+11. Run `python3 scripts/audit_public.py`.
+12. Append to `wiki/log.md` if the promotion materially changed the vault.
 
 ## Synthesis Prep Workflow
 
@@ -247,7 +248,7 @@ When you want a deterministic review brief before doing higher-judgment synthesi
 4. Audit the report quality before trusting it:
    - are the surfaced names and phrases materially useful?
    - is the output dominated by filler, transcript boilerplate, or weather-style repetition?
-   - did it miss any obvious recurring topic, entity, or connection?
+   - did it miss any obvious recurring topic, durable one-off reference, entity, or connection?
 5. If the report is structurally noisy or repeatedly misses clear patterns, prefer tuning `scripts/synthesis_report.py` before doing large-scale promotion.
 6. Treat the report as synthesis input, not as a substitute for human or agent judgment.
 7. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
@@ -261,7 +262,7 @@ When asked to lint or health-check the wiki, look for:
 - stale summaries superseded by newer sources
 - contradictions across pages
 - missing high-value cross-links
-- recurring claims that deserve their own page
+- claims, references, or insights that deserve their own page because they are recurring or durably useful
 - index entries that are missing or out of date
 - journal insights that deserve promotion into the wiki
 - CRM records that are mentioned elsewhere but do not exist yet

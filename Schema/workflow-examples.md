@@ -46,7 +46,7 @@ python3 scripts/wiki_tool.py orphan-notes
 ```
 
 2. Review the suggested names and phrases as prompts, not decisions.
-3. Choose only durable concepts, people, projects, or syntheses worth keeping.
+3. Choose only durable concepts, people, projects, references, or syntheses worth keeping. Recurrence helps, but a one-off item can qualify when it has future retrieval, decision, project, or reference value.
 4. Create or update canonical notes in `wiki/topics/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
 5. Use `wiki/pages/` for supporting durable notes that belong under a topic hub rather than acting as peer topics.
 6. Add explicit links back from relevant journal entries or durable notes where useful.
@@ -77,7 +77,7 @@ python3 scripts/synthesis_report.py
    - orphan durable notes
 4. Audit the report quality:
    - are the top candidates useful or mostly junk?
-   - did it miss any obvious recurring topic?
+   - did it miss any obvious recurring topic or durable one-off reference?
    - is tuning `scripts/synthesis_report.py` more valuable than promoting from this run?
 5. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
 6. Keep the report as a review aid, not as a substitute for canonical notes.

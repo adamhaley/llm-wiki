@@ -19,12 +19,12 @@ python3 scripts/wiki_tool.py orphan-notes
 ```
 
 3. Review the most relevant journal or wiki notes.
-4. Promote only durable ideas:
-   - recurring canonical concepts -> `wiki/topics/`
+4. Promote only durably useful ideas. Recurrence is a signal, not a requirement; one-off items can be promoted when they are reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later:
+   - durable canonical concepts -> `wiki/topics/`
    - supporting durable notes -> `wiki/pages/`
    - people/orgs/tools -> `wiki/entities/`
    - relationship-specific people -> `wiki/crm/`
-   - multi-note summaries -> `wiki/syntheses/`
+   - multi-note summaries or high-leverage conclusions -> `wiki/syntheses/`
 5. Prefer updating canonical pages over creating duplicates.
 6. Add explicit links where they materially improve navigation.
 7. Keep provenance factual. Journal-only promotions should cite journal entries in the body; external-source-backed notes should keep `sources` accurate.
