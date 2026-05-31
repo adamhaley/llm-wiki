@@ -20,6 +20,8 @@ The intent is simple:
 4. Let Obsidian Sync handle live content sync across devices.
 5. Use git to version the maintenance layer that drives the vault, not the vault's day-to-day content.
 
+For low-friction operation, capture can be followed by scheduled agent work rather than manual review. `scripts/run_synthesis_report.sh` generates changed-material briefs, and `scripts/run_autonomous_promotion.sh` can hand those briefs to a configured headless agent via `AUTOPROMOTE_COMMAND` so high-confidence durable items are promoted without making the human the default gate.
+
 Both Codex and Claude can use this repo:
 
 - `AGENTS.md` is the Codex entrypoint.

@@ -233,6 +233,26 @@ When asked to promote ideas from journal or source material into durable wiki pa
 11. Run `python3 scripts/audit_public.py`.
 12. Append to `wiki/log.md` if the promotion materially changed the vault.
 
+## Autonomous Promotion Workflow
+
+Autonomous promotion is allowed for high-confidence durable material. The user should not be the default gate for routine promotion.
+
+Use this posture:
+
+- Promote clear durable items without asking first.
+- Treat human review as exception-based, not mandatory.
+- Ask for input before destructive deletes or merges, sensitive CRM claims, major taxonomy changes, or resolving substantive contradictions.
+- Be conservative but active: weak candidates can stay unpromoted, but clear recurring patterns and durable one-off references should become wiki pages.
+- Leave an audit trail by preserving provenance, running maintenance commands, and appending to `wiki/log.md` when the vault materially changes.
+
+For headless operation, a scheduler may run:
+
+```bash
+scripts/run_autonomous_promotion.sh
+```
+
+That runner expects `AUTOPROMOTE_COMMAND` to name the local headless agent command that will read the generated prompt from stdin.
+
 ## Synthesis Prep Workflow
 
 When you want a deterministic review brief before doing higher-judgment synthesis work:

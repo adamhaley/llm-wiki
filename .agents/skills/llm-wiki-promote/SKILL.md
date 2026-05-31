@@ -25,10 +25,11 @@ python3 scripts/wiki_tool.py orphan-notes
    - people/orgs/tools -> `wiki/entities/`
    - relationship-specific people -> `wiki/crm/`
    - multi-note summaries or high-leverage conclusions -> `wiki/syntheses/`
-5. Prefer updating canonical pages over creating duplicates.
-6. Add explicit links where they materially improve navigation.
-7. Keep provenance factual. Journal-only promotions should cite journal entries in the body; external-source-backed notes should keep `sources` accurate.
-8. Run:
+5. In autonomous mode, promote high-confidence durable material without asking first. Ask only for sensitive CRM claims, destructive deletes or merges, major taxonomy changes, or unresolved contradictions.
+6. Prefer updating canonical pages over creating duplicates.
+7. Add explicit links where they materially improve navigation.
+8. Keep provenance factual. Journal-only promotions should cite journal entries in the body; external-source-backed notes should keep `sources` accurate.
+9. Run:
 
 ```bash
 python3 scripts/wiki_tool.py build

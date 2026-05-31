@@ -42,6 +42,8 @@ Promote when at least one of these is true:
 - the item informs a current or likely future decision
 - the item is rare, hard-won, project-relevant, or likely to save rediscovery later
 
+Autonomous promotion is the default for high-confidence cases. Human review is required only when the agent would need to make a sensitive, destructive, or taxonomy-defining decision.
+
 Do not promote when:
 
 - the content is purely ephemeral mood or weather
@@ -91,3 +93,20 @@ python3 scripts/audit_public.py
 ```
 
 Append to `wiki/log.md` if the promotion materially changed the vault.
+
+## Headless Automation
+
+Use `scripts/run_autonomous_promotion.sh` from cron or another scheduler when a headless agent is available.
+
+The runner:
+
+- creates a synthesis report only when journal entries or inbox clips changed
+- skips safely when there is no new material
+- writes a promotion prompt from the latest report
+- sends that prompt to `AUTOPROMOTE_COMMAND` via stdin
+
+Example cron shape:
+
+```cron
+*/30 * * * * cd /path/to/llm-wiki && AUTOPROMOTE_COMMAND='your-agent-command' scripts/run_autonomous_promotion.sh
+```

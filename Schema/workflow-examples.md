@@ -81,3 +81,21 @@ python3 scripts/synthesis_report.py
    - is tuning `scripts/synthesis_report.py` more valuable than promoting from this run?
 5. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
 6. Keep the report as a review aid, not as a substitute for canonical notes.
+
+## Run Autonomous Promotion
+
+1. Configure a headless agent command in the environment:
+
+```bash
+export AUTOPROMOTE_COMMAND='your-agent-command'
+```
+
+2. Run:
+
+```bash
+scripts/run_autonomous_promotion.sh
+```
+
+3. The runner will skip when no journal entries or inbox clips changed.
+4. When a report is created, the runner prompts the configured agent to promote high-confidence durable material.
+5. Human input is reserved for sensitive CRM claims, destructive deletes or merges, major taxonomy changes, or unresolved contradictions.
