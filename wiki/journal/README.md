@@ -7,6 +7,7 @@ A typical pattern is one markdown file per day or per session, grounded in relat
 ## Filename Convention
 
 - Use `YYYY-MM-DD.md` with zero-padded month and day.
+- For Telegram per-capture notes under `telegram/YYYY/`, use `YYYY-MM-DDTHH-MM-SS.md`; keep `source: telegram-voice` in frontmatter rather than repeating `telegram` in the filename.
 - Keep non-journal experiments and import debris out of this top-level directory.
 
 ## Light Frontmatter Convention
