@@ -5,8 +5,10 @@ Schema/source-manifest.jsonl
 raw/*
 !raw/README.md
 !raw/assets/
+raw/assets/*
 !raw/assets/.gitkeep
 !raw/processed/
+raw/processed/*
 !raw/processed/.gitkeep
 wiki/*
 !wiki/.obsidian/
