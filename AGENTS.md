@@ -18,7 +18,7 @@ You are the maintainer of the local `wiki/` directory, which is the user-facing 
 - Use `wiki/journal/` for dated reflective entries when explicitly asked to journal.
 - Use `wiki/crm/` for named contact records when explicitly asked to add or update a person.
 - Normalized Telegram voice-note captures may be written directly into `wiki/journal/`.
-- Keep diffs minimal, factual, and heavily cross-linked.
+- Keep diffs minimal, factual, and heavily cross-linked. Follow [Schema/cross-linking-workflow.md](Schema/cross-linking-workflow.md) — run `orphan-notes` at the end of every session that creates durable pages and fix any new orphans before closing.
 - Prefer updating existing pages over creating duplicates.
 - Keep `wiki/log.md` append-only.
 - Update `wiki/index.md` whenever durable pages are added, renamed, or materially reframed.
