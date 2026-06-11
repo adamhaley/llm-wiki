@@ -67,7 +67,7 @@ Use the destination based on the kind of material, not the transport that delive
 - Put person-specific records in `wiki/crm/`.
 
 Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
-Web Clipper captures may land in `wiki/inbox-clips/` first and later be normalized into `raw/` or promoted into curated wiki pages.
+Web Clipper captures land in `wiki/inbox-clips/` and promote directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` — the same path as journal entries. Do not route inbox-clips through `raw/`; `raw/` is a machine-local airlock for external material dropped onto a specific machine, not a target for vault-internal promotion.
 
 ## Sync Boundary
 
@@ -165,13 +165,15 @@ tags:
 ---
 ```
 
-The `sources` field should list repo-relative raw file paths such as `raw/article.md` or `raw/processed/article.md`.
+The `sources` field should list repo-relative raw file paths such as `raw/article.md` or `raw/processed/article.md`. Pages promoted from inbox clips or journal entries may omit `sources` or reference the originating clip or journal file path instead.
 
 ## Ingest Workflow
 
-When asked to ingest a source:
+The ingest path depends on where the source material lives.
 
-1. Read the source from `raw/` or `wiki/inbox-clips/`, depending on where it landed.
+### Ingesting from `raw/`
+
+1. Read the source from `raw/`.
 2. Identify whether it is genuinely new, an update, or redundant.
 3. Create or update the source page in `wiki/sources/`.
 4. Update any affected topic, entity, overview, or synthesis pages.
@@ -183,6 +185,19 @@ When asked to ingest a source:
 10. Update `wiki/index.md` if needed beyond the generated structure.
 11. Append an entry to `wiki/log.md`.
 12. Move the processed source into `raw/processed/` unless the user wants it left in place.
+
+### Promoting from `wiki/inbox-clips/`
+
+Inbox clips are already inside the vault. They do not pass through `raw/` and do not get source pages in `wiki/sources/`. Treat them like journal entries: read for durable signal, then promote directly into the wiki.
+
+1. Read the clip.
+2. Identify whether the material is genuinely new, an update to an existing page, or redundant.
+3. Promote durable claims directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` as appropriate.
+4. Add or revise cross-links.
+5. Run `python3 scripts/wiki_tool.py build`.
+6. Run `python3 scripts/wiki_tool.py lint`.
+7. Update `wiki/index.md` if needed beyond the generated structure.
+8. Append an entry to `wiki/log.md`.
 
 Default ingest posture:
 
@@ -219,6 +234,7 @@ When asked to promote ideas from journal or source material into durable wiki pa
 
 1. Start with helper signals such as:
    - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
+   - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types inbox-clips`
    - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
    - `python3 scripts/wiki_tool.py orphan-notes`
 2. Treat these outputs as candidate prompts, not automatic truth.
@@ -284,7 +300,7 @@ When asked to lint or health-check the wiki, look for:
 - missing high-value cross-links
 - claims, references, or insights that deserve their own page because they are recurring or durably useful
 - index entries that are missing or out of date
-- journal insights that deserve promotion into the wiki
+- journal insights or inbox clips that deserve promotion into the wiki
 - CRM records that are mentioned elsewhere but do not exist yet
 
 Prefer producing concrete fixes, not only observations.
@@ -303,6 +319,7 @@ Useful non-mutating promotion helpers:
 
 ```bash
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
+python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types inbox-clips
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
 python3 scripts/synthesis_report.py --dry-run
