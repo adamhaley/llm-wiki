@@ -9,6 +9,7 @@
 Directory intent:
 
 - `raw/`: external source material not visible in the Obsidian vault
+- `wiki/` root: in-vault inbox for hand-dropped files awaiting triage — the `raw/` equivalent inside the vault. List with `python3 scripts/wiki_tool.py root-inbox`. No naming convention required.
 - `wiki/sources/`: source summaries and provenance pages
 - `wiki/topics/`: canonical topic hubs
 - `wiki/pages/`: supporting durable pages related to canonical topics

@@ -56,6 +56,7 @@ EMPTY_MESSAGES = {
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm"}
 ALLOWED_TYPES = set(CATALOG_DIRS.values())
 SKIP_FILENAMES = {"README.md", "index.md"}
+WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "catalog.jsonl"}
 STOPWORDS = {
     "a", "about", "after", "all", "also", "am", "an", "and", "any", "are", "as", "at",
     "be", "because", "been", "before", "being", "but", "by", "can", "could", "day", "did",
@@ -469,6 +470,24 @@ def orphan_candidates() -> list[dict[str, str]]:
     return results
 
 
+def root_inbox_files() -> list[Path]:
+    """Loose .md files dropped directly in wiki/ root, awaiting triage.
+
+    This is the in-vault counterpart to raw/: files land here by hand and are
+    expected to be promoted into the correct subdirectory or deleted, not to
+    accumulate indefinitely. Unlike raw/, no frontmatter or naming convention
+    is required here.
+    """
+    if not WIKI_DIR.exists():
+        return []
+    files = []
+    for path in sorted(WIKI_DIR.glob("*.md")):
+        if path.name in WIKI_ROOT_CORE_FILES:
+            continue
+        files.append(path)
+    return files
+
+
 def build_folder_index(folder_name: str, notes: list[Note]) -> None:
     folder = WIKI_DIR / folder_name
     index_path = folder / "index.md"
@@ -573,6 +592,7 @@ def command_doctor(_: argparse.Namespace) -> int:
     print(f"manifest_exists={MANIFEST_PATH.exists()}")
     print(f"raw_source_count={len(list_source_files())}")
     print(f"wiki_note_count={len(load_catalog_notes())}")
+    print(f"root_inbox_count={len(root_inbox_files())}")
     return 0
 
 
@@ -761,6 +781,20 @@ def command_orphan_notes(_: argparse.Namespace) -> int:
     return 0
 
 
+def command_root_inbox(_: argparse.Namespace) -> int:
+    files = root_inbox_files()
+    for path in files:
+        size = path.stat().st_size
+        print(
+            json.dumps(
+                {"path": repo_relative(path), "bytes": size, "empty": size == 0},
+                sort_keys=True,
+            )
+        )
+    print(f"root_inbox_files={len(files)}")
+    return 0
+
+
 def command_log(args: argparse.Namespace) -> int:
     title = args.title.strip()
     details = args.details.strip()
@@ -790,6 +824,7 @@ def build_parser() -> argparse.ArgumentParser:
         "search-catalog": command_search_catalog,
         "promotion-candidates": command_promotion_candidates,
         "orphan-notes": command_orphan_notes,
+        "root-inbox": command_root_inbox,
         "log": command_log,
     }
 
@@ -814,6 +849,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="comma-separated note types to scan",
     )
     subparsers.add_parser("orphan-notes")
+    subparsers.add_parser("root-inbox")
     log_parser = subparsers.add_parser("log")
     log_parser.add_argument("--title", required=True)
     log_parser.add_argument("--details", required=True)

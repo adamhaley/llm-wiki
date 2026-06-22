@@ -16,8 +16,11 @@ python3 scripts/wiki_tool.py doctor
 python3 scripts/wiki_tool.py build
 python3 scripts/wiki_tool.py lint
 python3 scripts/wiki_tool.py source-lint
+python3 scripts/wiki_tool.py root-inbox
 python3 scripts/audit_public.py
 ```
+
+If `root-inbox` lists files, triage each one into the correct subdirectory or delete it if it's debris (e.g. an empty stub).
 
 If raw source coverage changed, also run:
 

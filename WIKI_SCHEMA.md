@@ -36,6 +36,7 @@ The goal is not to re-read every raw source from scratch on every question. The 
 ### `wiki/`
 
 - `wiki/.obsidian/`: vault-local Obsidian settings.
+- `wiki/` root (loose files): an in-vault inbox for hand-dropped material — the counterpart to `raw/`, but inside the Obsidian vault instead of outside it. The user occasionally pastes or saves files directly at the vault root between sessions. No frontmatter or naming convention is required there. Run `python3 scripts/wiki_tool.py root-inbox` to list what's waiting and triage each file into the correct subdirectory (or delete it if it's debris, e.g. an empty stub). Don't leave files there indefinitely.
 - `wiki/inbox-clips/`: Obsidian-visible landing zone for Web Clipper captures.
 - `wiki/index.md`: vault catalog and starting point for navigation.
 - `wiki/log.md`: append-only chronological operations log.
@@ -61,6 +62,7 @@ The goal is not to re-read every raw source from scratch on every question. The 
 Use the destination based on the kind of material, not the transport that delivered it.
 
 - Put external source material in `raw/`.
+- Put hand-dropped material that lands inside the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
 - Put Web Clipper captures that benefit from immediate visibility in `wiki/inbox-clips/`.
 - Put normalized personal reflections, dictated thoughts, and daily notes in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/`.
@@ -186,6 +188,13 @@ The ingest path depends on where the source material lives.
 11. Append an entry to `wiki/log.md`.
 12. Move the processed source into `raw/processed/` unless the user wants it left in place.
 
+### Triaging the `wiki/` Root Inbox
+
+1. Run `python3 scripts/wiki_tool.py root-inbox` to list loose files at the vault root.
+2. For each file, decide: promote into the matching subdirectory (`wiki/pages/`, `wiki/journal/`, etc.), or delete it if it's debris (e.g. an empty stub from a failed save).
+3. Treat the content the same way you would a journal entry or inbox clip for promotion purposes — no `raw/` detour required.
+4. Empty files (`bytes: 0` in the command output) can generally be deleted without asking, unless the filename suggests it's a placeholder the user is actively about to fill in.
+
 ### Promoting from `wiki/inbox-clips/`
 
 Inbox clips are already inside the vault. They do not pass through `raw/` and do not get source pages in `wiki/sources/`. Treat them like journal entries: read for durable signal, then promote directly into the wiki.
@@ -302,6 +311,7 @@ When asked to lint or health-check the wiki, look for:
 - index entries that are missing or out of date
 - journal insights or inbox clips that deserve promotion into the wiki
 - CRM records that are mentioned elsewhere but do not exist yet
+- untriaged files sitting at the `wiki/` root inbox
 
 Prefer producing concrete fixes, not only observations.
 
@@ -322,6 +332,7 @@ python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types jour
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types inbox-clips
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
+python3 scripts/wiki_tool.py root-inbox
 python3 scripts/synthesis_report.py --dry-run
 ```
 

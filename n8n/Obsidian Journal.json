@@ -9,7 +9,7 @@
       "typeVersion": 2,
       "position": [
         -864,
-        736
+        832
       ],
       "id": "8169cd49-8fcf-444a-9bb1-edf370c339e7",
       "name": "Create Filename1"
@@ -28,7 +28,7 @@
       "typeVersion": 1.1,
       "position": [
         -1312,
-        736
+        832
       ],
       "id": "4d56c918-83c1-4eb5-935d-caa95b9428cc",
       "name": "When Executed by Another Workflow"
@@ -45,8 +45,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        32,
-        832
+        -192,
+        1024
       ],
       "id": "8b8dd36d-beff-40d4-8b6c-3a184b92b3db",
       "name": "Read/Write Files from Disk"
@@ -60,8 +60,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -192,
-        832
+        -416,
+        1024
       ],
       "id": "8427b892-18f4-418b-ab49-14420010f23e",
       "name": "Convert to File"
@@ -84,58 +84,26 @@
       "typeVersion": 3.4,
       "position": [
         -1088,
-        736
+        832
       ],
       "id": "b5b6418c-5eaa-4618-b6bc-32bc886b8b90",
       "name": "Config"
     },
     {
       "parameters": {
-        "fileSelector": "={{ $('Config').item.json.path }}/{{ $json.filename }}",
+        "fileSelector": "={{ $('Config').item.json.path }}{{ $json.filename }}",
         "options": {}
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
         -640,
-        736
+        832
       ],
       "id": "6a2c0c99-7b1c-4078-a033-a405c6575b44",
-      "name": "Read File"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "e18148be-17d8-4aa8-851a-59de28273999",
-              "leftValue": "={{ $json }}",
-              "rightValue": "",
-              "operator": {
-                "type": "object",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -416,
-        736
-      ],
-      "id": "fab5e4bc-e105-4c3e-9134-b515eda7a20b",
-      "name": "If File Exists"
+      "name": "Read File",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -160,24 +128,11 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        464,
+        480,
         640
       ],
       "id": "5853cdff-c761-483a-a3ea-152e40584ce8",
       "name": "Read/Write Files from Disk1"
-    },
-    {
-      "parameters": {
-        "jsCode": "let str = $input.first().json.data;                                    str += $now.toLocaleString({ timeStyle: 'short' });\nstr += $('Create Filename1').item.json.content ?? '';                  return { str };"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        32,
-        640
-      ],
-      "id": "d90439e7-a5c3-40a6-ad65-6727ad273bd9",
-      "name": "Code in JavaScript"
     },
     {
       "parameters": {
@@ -188,18 +143,76 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        240,
+        256,
         640
       ],
       "id": "65389134-9eb1-4ed7-ac1d-cfd7ec89c62a",
       "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "  let prev = ($input.first().json.data || '').replace(/\\s+$/, '');\n  let entry = $now.toLocaleString({ timeStyle: 'short' }) + '\\n' + ($('Create Filename1').item.json.content ?? '');\n  let str = prev ? prev + '\\n\\n' + entry : entry;\n  return { str };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        640
+      ],
+      "id": "d90439e7-a5c3-40a6-ad65-6727ad273bd9",
+      "name": "Append new Entry"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8f75a682-fc5c-49e1-87f6-5a709be5577f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -416,
+        736
+      ],
+      "id": "d3b4cb94-d475-4b53-bccd-62eb66be4f5a",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        832
+      ],
+      "id": "0baf1df6-4cb5-4a52-8d2a-962386699b9f",
+      "name": "No Operation, do nothing"
     }
   ],
   "pinData": {
     "When Executed by Another Workflow": [
       {
         "json": {
-          "content": "okay, I am testing the new append journal flow in N8N.\n"
+          "content": "Alright, so yesterday I sent the resume to two separate jobs on Lara jobs. One was this med medical medical I can't remember what they're called med something and it's you know hb1 kind of stuff but they're all a Laravel shop and they actually even without getting my resume and getting back to me they allowed as part of the initial submission to set up a 30-minute live coding interview which is this next Tuesday on the 23rd so I'll be practicing every day for that just because it's going to be AI free live hand coding and I have no idea what to expect in terms of algorithms or whatever and then the other one was I forgot they were called but it's a what's the bed-and-breakfast thing the bed-and-breakfast thing the modern bed-and-breakfast thing hospitality app it actually might already be recorded in my second brain so today yesterday and then today was a rockin day of lift driving it is poppin going off in Los Angeles right now lift app was just one right after the other and I was out in like Alhambra and La Crescenta and all that weird to the east basically between Pasadena and Riverside for most of the day and it was a kind of a good combination of being a little bit laid back more low-key than Los Angeles proper but it was also just going off like one right after the other and it was all with boost so made my $200 my goal is like $200 a day in order to get through this month and I'm feeling good about it I think it's gonna be great\n"
         },
         "pairedItem": {
           "item": 0
@@ -256,18 +269,7 @@
       "main": [
         [
           {
-            "node": "If File Exists",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If File Exists": {
-      "main": [
-        [
-          {
-            "node": "Extract from File",
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -285,18 +287,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Convert to File1",
+            "node": "Append new Entry",
             "type": "main",
             "index": 0
           }
@@ -313,6 +304,35 @@
           }
         ]
       ]
+    },
+    "Append new Entry": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -324,7 +344,7 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed"
   },
-  "versionId": "278d378c-22ca-4581-95d4-756e0e9db3d4",
+  "versionId": "30e6c4a2-0c26-4d86-b1ec-5d573a0fe285",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9eba4434b08a3b38c7a52d54228c736501f146e2a8d1b314568ff999759dcb0e"
