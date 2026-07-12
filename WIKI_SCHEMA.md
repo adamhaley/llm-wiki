@@ -32,6 +32,14 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - If a workflow or rule first appears in `wiki/` content and later becomes mandatory for maintenance behavior, promote that rule into the instruction layer instead of treating the content page itself as authoritative.
 - When deciding whether something belongs in git, use this boundary: instruction-layer files are tracked by default; content-layer notes may remain git-ignored by default.
 
+## Editing Fallback Policy
+
+- Prefer `apply_patch` for manual edits when the edit tool is functioning normally.
+- If `apply_patch` or the sandbox path resolver fails on a file that is otherwise readable and writable inside the workspace, a small deterministic repo-local scripted edit is an acceptable fallback.
+- Keep fallback edits narrow: target a specific file, use explicit string anchors when possible, and avoid broad rewrite scripts for small changes.
+- Prefer existing repo tools and standard library utilities over adding new dependencies just to make edits work around sandbox quirks.
+- After any fallback edit to tracked instructions, scripts, or schema files, verify the resulting diff directly and run the normal maintenance checks.
+
 ## Directory Conventions
 
 ### `raw/`
