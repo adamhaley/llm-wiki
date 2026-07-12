@@ -24,6 +24,14 @@ The goal is not to re-read every raw source from scratch on every question. The 
 - The index and log are mandatory maintenance files.
 - The deterministic toolchain lives in `scripts/wiki_tool.py` and `scripts/audit_public.py`.
 
+## Instruction Layer vs Content Layer
+
+- `WIKI_SCHEMA.md` is the canonical authoritative instruction source for this repository.
+- `ALL_CAPS` markdown files such as `WIKI_SCHEMA.md` and `AGENTS.md` are the instruction layer: they are normative for agent behavior, should be tracked in git, and override conflicting workflow descriptions elsewhere.
+- Notes under `wiki/` are the content layer, even when they discuss workflows, systems, or second-brain process. They are durable knowledge, research, or evolving practice, not binding repo instructions by themselves.
+- If a workflow or rule first appears in `wiki/` content and later becomes mandatory for maintenance behavior, promote that rule into the instruction layer instead of treating the content page itself as authoritative.
+- When deciding whether something belongs in git, use this boundary: instruction-layer files are tracked by default; content-layer notes may remain git-ignored by default.
+
 ## Directory Conventions
 
 ### `raw/`
@@ -199,14 +207,17 @@ The ingest path depends on where the source material lives.
 
 Inbox clips are already inside the vault. They do not pass through `raw/` and do not get source pages in `wiki/sources/`. Treat them like journal entries: read for durable signal, then promote directly into the wiki.
 
-1. Read the clip.
-2. Identify whether the material is genuinely new, an update to an existing page, or redundant.
-3. Promote durable claims directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` as appropriate.
-4. Add or revise cross-links.
-5. Run `python3 scripts/wiki_tool.py build`.
-6. Run `python3 scripts/wiki_tool.py lint`.
-7. Update `wiki/index.md` if needed beyond the generated structure.
-8. Append an entry to `wiki/log.md`.
+1. Treat `wiki/inbox-clips/` as a staging lane, not a permanent library.
+2. Prefer processing clips in related clusters when practical instead of handling every clip as an isolated page-creation event.
+3. Read the clip.
+4. Identify whether the material is genuinely new, an update to an existing page, redundant, or better deferred for a later themed pass.
+5. Prefer one synthesis or targeted update to existing durable pages over many thin pages when multiple clips reinforce the same idea.
+6. Promote durable claims directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` as appropriate.
+7. Add or revise cross-links.
+8. Run `python3 scripts/wiki_tool.py build`.
+9. Run `python3 scripts/wiki_tool.py lint`.
+10. Update `wiki/index.md` if needed beyond the generated structure.
+11. Append an entry to `wiki/log.md`.
 
 Default ingest posture:
 
@@ -251,7 +262,7 @@ When asked to promote ideas from journal or source material into durable wiki pa
 4. Promote based on durable future utility, not only repetition. A one-off source, clip, or journal insight can deserve promotion when it is reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later.
 5. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for supporting durable pages linked from those hubs.
 6. Prefer updating an existing canonical page over creating a new one.
-7. Add explicit links where they improve retrieval or context, but avoid blanket backlink spam.
+7. Use cross-links to amplify signal selectively. Prefer clip -> durable page and journal -> durable page synthesis over dense direct link spam between every related clip and journal entry.
 8. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
 9. Run `python3 scripts/wiki_tool.py build`.
 10. Run `python3 scripts/wiki_tool.py lint`.
