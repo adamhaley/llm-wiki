@@ -72,6 +72,38 @@ Rules:
 - Every `sources` path must exist under `wiki/inbox/`.
 - `type` should match the note's role — `wiki/pages/` now holds `page`, `entity`, `source`, and `synthesis` types side by side, differentiated by this field rather than by directory.
 
+## CRM Notes
+
+CRM notes should include structured contact fields in frontmatter so the vault can later sync with a database-backed CRM without losing relationship context.
+
+```yaml
+---
+title: Contact Name
+type: crm
+status: active
+created: 2026-08-11
+updated: 2026-08-11
+source_count: 0
+emails: []
+phones: []
+websites: []
+social_profiles: []
+preferred_contact: unknown
+location: unknown
+company: unknown
+role: unknown
+relationship_stage: unknown
+last_contacted: unknown
+next_follow_up: unknown
+crm_external_id: unknown
+crm_sync_status: local-only
+tags:
+  - crm
+---
+```
+
+Unknown contact information should stay explicit rather than guessed.
+
 ## Journal Notes
 
 `wiki/journal/` may use lighter frontmatter when the note is a normalized capture rather than a curated knowledge page. The tooling catalogs these notes but does not require provenance fields.

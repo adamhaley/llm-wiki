@@ -15,6 +15,14 @@ The goal is not to re-read every raw capture from scratch on every question. The
 
 **Historical note:** earlier versions of this schema kept raw source material in a `raw/` directory outside the Obsidian vault, on the theory that raw material was git-versioned and immutable while `wiki/` was Sync-versioned and mutable. That split blocked a real requirement — capturing on one device (open at irregular hours) and processing on another (always-on) — because material outside the vault can never reach Obsidian Sync, full stop. `raw/` was retired and folded into `wiki/inbox/` for this reason. If you see references to `raw/` in older log entries or archived audit reports, they predate this change.
 
+## Core Value: Use-Led Simplicity
+
+This system exists to support Adam's lived use of the second brain: capture, reflection, retrieval, synthesis, and action. Its structure must stay subordinate to that use.
+
+Complexity is allowed only when it earns its keep through repeated practical use. Do not add folders, note classes, workflows, automation, metadata, or agent rituals merely because they are conceptually elegant. If a distinction is not helping capture, review, retrieval, promotion, privacy, or action, prefer the simpler model.
+
+The vault should be led by daily usage, not by abstract technical completeness. Agents maintaining this system should treat simplification as a first-class maintenance behavior: merge redundant categories, retire unused workflows, and keep the user-facing process small enough that the second brain remains survivable as a daily practice.
+
 ## Ownership Rules
 
 - The human curates what enters `wiki/inbox/`.
@@ -176,6 +184,32 @@ tags:
 ```
 
 The `sources` field should list repo-relative file paths such as `wiki/inbox/article.md`. Pages promoted from inbox material or journal entries may omit `sources` or reference the originating file path instead.
+
+## CRM Record Shape
+
+CRM records are not just biographies. They should be useful for future contact, follow-up, and eventual structured sync into a database-backed CRM.
+
+Every `type: crm` note should reserve frontmatter fields for contact information, even when the current value is unknown:
+
+```yaml
+emails: []
+phones: []
+websites: []
+social_profiles: []
+preferred_contact: unknown
+location: unknown
+company: unknown
+role: unknown
+relationship_stage: unknown
+last_contacted: unknown
+next_follow_up: unknown
+crm_external_id: unknown
+crm_sync_status: local-only
+```
+
+Use the body for relationship context, history, judgment, and nuance. Use frontmatter for fields that may later sync cleanly to a database. Do not invent contact details; leave unknown fields explicit until verified.
+
+Future database sync should treat markdown CRM notes as the context layer and the external database as the operational structured layer. `crm_external_id` and `crm_sync_status` are reserved for that bridge.
 
 ## Ingest Workflow
 
