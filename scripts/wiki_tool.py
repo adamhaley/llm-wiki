@@ -467,6 +467,80 @@ def orphan_candidates() -> list[dict[str, str]]:
     return results
 
 
+CROSS_LINK_TARGET_TYPES = {"topic", "page", "entity", "synthesis", "source", "crm"}
+INLINE_CODE_PATTERN = re.compile(r"`[^`\n]+`")
+EXISTING_LINK_PATTERN = re.compile(r"\[\[[^\]]*\]\]|\[[^\]]*\]\([^)]*\)")
+
+
+def cross_link_candidates(max_per_file: int = 25) -> list[dict[str, str]]:
+    """Find plain-text mentions of other notes' titles/aliases that aren't linked yet.
+
+    Mirrors Obsidian's per-note "Unlinked mentions" panel, but vault-wide.
+    Deliberately surfaces candidates only -- a text match isn't always a real
+    reference, so linking is a judgment call for the reader (or an agent
+    reviewing the output), not an automatic rewrite.
+    """
+    notes = load_catalog_notes()
+    targets: dict[str, tuple[Note, str]] = {}
+    for note in notes:
+        if note.note_type not in CROSS_LINK_TARGET_TYPES:
+            continue
+        names = [note.title] + [
+            str(alias) for alias in note.frontmatter.get("aliases", []) if str(alias).strip()
+        ]
+        for name in names:
+            name = name.strip()
+            if len(name) < 4 or name.lower() in STOPWORDS:
+                continue
+            targets.setdefault(name.lower(), (note, name))
+
+    if not targets:
+        return []
+
+    name_pattern = re.compile(
+        r"\b(" + "|".join(re.escape(name) for _, name in targets.values()) + r")\b",
+        re.IGNORECASE,
+    )
+
+    results: list[dict[str, str]] = []
+    for source in notes:
+        body = note_body(source.path)
+        found_targets: set[str] = set()
+        per_file = 0
+        in_fence = False
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence or stripped.startswith("#"):
+                continue
+            cleaned = INLINE_CODE_PATTERN.sub("", line)
+            cleaned = EXISTING_LINK_PATTERN.sub("", cleaned)
+            for match in name_pattern.finditer(cleaned):
+                matched_text = match.group(1)
+                target_note, canonical_name = targets[matched_text.lower()]
+                if target_note.rel_path == source.rel_path:
+                    continue
+                dedup_key = target_note.rel_path
+                if dedup_key in found_targets:
+                    continue
+                if per_file >= max_per_file:
+                    break
+                found_targets.add(dedup_key)
+                per_file += 1
+                results.append(
+                    {
+                        "source": source.rel_path,
+                        "target": target_note.rel_path,
+                        "target_title": canonical_name,
+                        "matched": matched_text,
+                        "excerpt": stripped[:160],
+                    }
+                )
+    return results
+
+
 def root_inbox_files() -> list[Path]:
     """Loose .md files dropped directly in wiki/ root, awaiting triage.
 
@@ -770,6 +844,14 @@ def command_orphan_notes(_: argparse.Namespace) -> int:
     return 0
 
 
+def command_cross_link_candidates(args: argparse.Namespace) -> int:
+    results = cross_link_candidates(max_per_file=args.max_per_file)
+    for row in results:
+        print(json.dumps(row, sort_keys=True))
+    print(f"candidates={len(results)}")
+    return 0
+
+
 def command_root_inbox(_: argparse.Namespace) -> int:
     files = root_inbox_files()
     for path in files:
@@ -813,6 +895,7 @@ def build_parser() -> argparse.ArgumentParser:
         "search-catalog": command_search_catalog,
         "promotion-candidates": command_promotion_candidates,
         "orphan-notes": command_orphan_notes,
+        "cross-link-candidates": command_cross_link_candidates,
         "root-inbox": command_root_inbox,
         "log": command_log,
     }
@@ -838,6 +921,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="comma-separated note types to scan",
     )
     subparsers.add_parser("orphan-notes")
+    cross_link_parser = subparsers.add_parser("cross-link-candidates")
+    cross_link_parser.add_argument("--max-per-file", type=int, default=25)
     subparsers.add_parser("root-inbox")
     log_parser = subparsers.add_parser("log")
     log_parser.add_argument("--title", required=True)

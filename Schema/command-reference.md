@@ -14,6 +14,7 @@ python3 scripts/wiki_tool.py search-catalog --query "llm wiki"
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
+python3 scripts/wiki_tool.py cross-link-candidates
 python3 scripts/wiki_tool.py root-inbox
 python3 scripts/synthesis_report.py
 python3 scripts/synthesis_report.py --dry-run
@@ -31,6 +32,7 @@ python3 scripts/audit_public.py
 - Run `source-scan --update --accept-covered` after ingesting or triaging `wiki/inbox/` items.
 - Use `doctor` as a quick non-mutating environment check.
 - Use `promotion-candidates` and `orphan-notes` to surface likely promotion and cross-linking work, but keep semantic promotion decisions agent-driven.
+- Use `cross-link-candidates` to surface plain-text mentions of other notes that aren't linked yet (vault-wide equivalent of Obsidian's "Unlinked mentions" panel). Candidates only — judge each one before linking.
 - Use `root-inbox` to list hand-dropped files sitting at the `wiki/` root awaiting triage — distinct from `wiki/inbox/`, which is the intentional capture zone.
 - Use `synthesis_report.py` to generate a review brief from new or changed journal entries and `wiki/inbox/` items.
 - Use `run_synthesis_report.sh` for cron-friendly report generation.

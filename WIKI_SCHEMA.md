@@ -241,6 +241,7 @@ When asked to promote ideas from journal or inbox material into durable wiki pag
  - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
  - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
  - `python3 scripts/wiki_tool.py orphan-notes`
+ - `python3 scripts/wiki_tool.py cross-link-candidates` — plain-text mentions of other notes' titles that aren't linked yet; see `Schema/cross-linking-workflow.md`
 2. Treat these outputs as candidate prompts, not automatic truth.
 3. Decide whether the material belongs in `wiki/topics/` (hub), `wiki/pages/` (as `type: page`, `entity`, or `synthesis`), or `wiki/crm/`.
 4. Promote based on durable future utility, not only repetition. A one-off inbox item, clip, or journal insight can deserve promotion when it is reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later.
@@ -339,6 +340,7 @@ Useful non-mutating promotion helpers:
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
+python3 scripts/wiki_tool.py cross-link-candidates
 python3 scripts/wiki_tool.py root-inbox
 python3 scripts/synthesis_report.py --dry-run
 ```

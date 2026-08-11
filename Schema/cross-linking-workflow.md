@@ -16,6 +16,22 @@ python3 scripts/wiki_tool.py orphan-notes
 
 Any page listed as an orphan must have at least one inbound link added before the session ends. An orphan is not a broken page. It just means no existing page links to it yet.
 
+## Finding Missed Links: cross-link-candidates
+
+`orphan-notes` finds pages nobody links to. It doesn't find the reverse: pages that already mention another page's title in plain text without linking it. Journal entries are the biggest source of this — someone might write "worked on Codette today" without `[[Codette]]`.
+
+```bash
+python3 scripts/wiki_tool.py cross-link-candidates
+```
+
+Each candidate is a plain-text mention of another note's title or alias, not already inside a link, code span, frontmatter, or heading. **This is a candidate list, not an auto-link list** — apply the same judgment as `promotion-candidates`:
+
+- Is the mention actually referring to that entity, or is it a coincidental word match? ("jobs" matching the Jobs topic in "sent the resume to two separate jobs" is a real match; a hypothetical "second brain" matching in an unrelated sentence about brains in general would not be.)
+- Is the source file itself the target's own page? (Already excluded by the tool, but re-check on judgment calls.)
+- Convert genuine matches to `[[wikilinks]]` or `[text](relative/path.md)` links inline, in place, preserving the surrounding sentence.
+
+Run this as part of the weekly grooming pass (`scripts/run_weekly_grooming.sh`), not just ad hoc — it's most valuable applied consistently across the journal backlog, not as a one-time sweep.
+
 ## Deciding What Should Link Where
 
 Apply these heuristics in order:
