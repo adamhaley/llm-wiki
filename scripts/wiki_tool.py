@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -541,6 +542,83 @@ def cross_link_candidates(max_per_file: int = 25) -> list[dict[str, str]]:
     return results
 
 
+MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
+WIKILINK_TARGET_PATTERN = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
+
+
+def wiki_markdown_index() -> dict[str, Path]:
+    """basename (lowercased, no extension) -> path, for every markdown file in wiki/.
+
+    Used to resolve [[wikilinks]], which Obsidian matches by filename across
+    the whole vault rather than by relative path.
+    """
+    index: dict[str, Path] = {}
+    for path in WIKI_DIR.rglob("*.md"):
+        index.setdefault(path.stem.lower(), path)
+    return index
+
+
+def dead_link_candidates() -> list[dict[str, str]]:
+    """Find [text](target) and [[wikilink]] targets that don't resolve to a real file.
+
+    wiki_tool.py lint validates frontmatter and source/raw_source paths, but
+    not that every in-body link target actually exists -- this fills that gap.
+    """
+    notes = load_catalog_notes()
+    name_index = wiki_markdown_index()
+    results: list[dict[str, str]] = []
+
+    for note in notes:
+        body = note_body(note.path)
+        base = note.path.parent
+        in_fence = False
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            cleaned = INLINE_CODE_PATTERN.sub("", line)
+
+            for _, target in MARKDOWN_LINK_PATTERN.findall(cleaned):
+                target = target.strip()
+                if not target or "://" in target or target.startswith("#") or target.lower().startswith("mailto:"):
+                    continue
+                target_path = target.split("#", 1)[0].strip()
+                if not target_path or not target_path.lower().endswith(".md"):
+                    continue
+                resolved = (base / target_path).resolve()
+                if resolved.exists():
+                    continue
+                suggestions = difflib.get_close_matches(Path(target_path).stem.lower(), name_index.keys(), n=3)
+                results.append(
+                    {
+                        "source": note.rel_path,
+                        "link_type": "markdown",
+                        "target": target_path,
+                        "excerpt": stripped[:160],
+                        "suggestions": ", ".join(wiki_relative(name_index[s]) for s in suggestions),
+                    }
+                )
+
+            for wikitarget in WIKILINK_TARGET_PATTERN.findall(cleaned):
+                key = wikitarget.strip().lower()
+                if not key or key in name_index:
+                    continue
+                suggestions = difflib.get_close_matches(key, name_index.keys(), n=3)
+                results.append(
+                    {
+                        "source": note.rel_path,
+                        "link_type": "wikilink",
+                        "target": wikitarget.strip(),
+                        "excerpt": stripped[:160],
+                        "suggestions": ", ".join(wiki_relative(name_index[s]) for s in suggestions),
+                    }
+                )
+    return results
+
+
 def root_inbox_files() -> list[Path]:
     """Loose .md files dropped directly in wiki/ root, awaiting triage.
 
@@ -852,6 +930,14 @@ def command_cross_link_candidates(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_dead_links(_: argparse.Namespace) -> int:
+    results = dead_link_candidates()
+    for row in results:
+        print(json.dumps(row, sort_keys=True))
+    print(f"dead_links={len(results)}")
+    return 0
+
+
 def command_root_inbox(_: argparse.Namespace) -> int:
     files = root_inbox_files()
     for path in files:
@@ -896,6 +982,7 @@ def build_parser() -> argparse.ArgumentParser:
         "promotion-candidates": command_promotion_candidates,
         "orphan-notes": command_orphan_notes,
         "cross-link-candidates": command_cross_link_candidates,
+        "dead-links": command_dead_links,
         "root-inbox": command_root_inbox,
         "log": command_log,
     }
@@ -923,6 +1010,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("orphan-notes")
     cross_link_parser = subparsers.add_parser("cross-link-candidates")
     cross_link_parser.add_argument("--max-per-file", type=int, default=25)
+    subparsers.add_parser("dead-links")
     subparsers.add_parser("root-inbox")
     log_parser = subparsers.add_parser("log")
     log_parser.add_argument("--title", required=True)

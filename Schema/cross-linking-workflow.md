@@ -32,6 +32,18 @@ Each candidate is a plain-text mention of another note's title or alias, not alr
 
 Run this as part of the weekly grooming pass (`scripts/run_weekly_grooming.sh`), not just ad hoc — it's most valuable applied consistently across the journal backlog, not as a one-time sweep.
 
+## Finding Broken Links: dead-links
+
+Neither `orphan-notes` nor `cross-link-candidates` catches links that are already there but point at nothing. `wiki_tool.py lint` validates frontmatter and `raw_source`/`sources` paths, but not that every in-body `[text](target)` or `[[wikilink]]` actually resolves to a real file.
+
+```bash
+python3 scripts/wiki_tool.py dead-links
+```
+
+Each result includes up to 3 filename suggestions (via string similarity) to help pick the right repoint. Common causes seen in this vault: relative markdown links written assuming the wrong directory depth (e.g. `./file.md` used from within a folder where the target actually lives in a sibling folder), and stale references left behind after a rename (a note's *filename* changes but a link elsewhere still points at the old name).
+
+Note the two link styles resolve differently: markdown links `[text](path)` are relative to the *linking* file's directory; wikilinks `[[Name]]` are resolved by Obsidian across the *whole vault* by filename, not by frontmatter title. A wikilink built from a note's title (e.g. `[[Second Brain]]`) will only resolve if that exact string matches a filename or an `aliases:` entry — a multi-word title that differs from its kebab-case filename (`second-brain.md`) needs an alias, or should be written as a markdown link with the real path instead.
+
 ## Deciding What Should Link Where
 
 Apply these heuristics in order:
