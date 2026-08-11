@@ -27,7 +27,7 @@ tags:
 
 ## Source Notes
 
-Source notes live in `wiki/sources/` and point back to raw source material with a path field because `raw/` intentionally lives outside the Obsidian vault.
+Source notes live in `wiki/pages/` with `type: source` and point back to raw material with a path field into `wiki/inbox/`.
 
 ```yaml
 ---
@@ -36,7 +36,7 @@ type: source
 status: active
 created: 2026-05-24
 updated: 2026-05-24
-raw_source: raw/why-llm-wiki.md
+raw_source: wiki/inbox/why-llm-wiki.md
 source_kind: article
 tags:
   - source
@@ -46,7 +46,7 @@ tags:
 
 ## Compiled Notes
 
-Compiled notes in `wiki/topics/`, `wiki/entities/`, `wiki/syntheses/`, and `wiki/crm/` keep provenance in machine-readable `sources` metadata.
+Compiled notes in `wiki/topics/`, `wiki/pages/` (`type: entity`, `synthesis`, or `page`), and `wiki/crm/` keep provenance in machine-readable `sources` metadata.
 
 ```yaml
 ---
@@ -56,7 +56,7 @@ status: seed
 created: 2026-05-24
 updated: 2026-05-24
 sources:
-  - raw/why-llm-wiki.md
+  - wiki/inbox/why-llm-wiki.md
 source_count: 1
 aliases:
   - query-compiled-wiki-first
@@ -69,8 +69,8 @@ tags:
 Rules:
 
 - `source_count` must equal the number of `sources`.
-- Every `sources` path must exist under `raw/` or `raw/processed/`.
-- `type` should match the note's directory.
+- Every `sources` path must exist under `wiki/inbox/`.
+- `type` should match the note's role — `wiki/pages/` now holds `page`, `entity`, `source`, and `synthesis` types side by side, differentiated by this field rather than by directory.
 
 ## Journal Notes
 

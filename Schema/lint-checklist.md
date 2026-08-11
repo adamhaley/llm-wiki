@@ -6,10 +6,10 @@ The deterministic maintenance gate should catch these cases before commit:
 - `wiki/catalog.jsonl` is stale or absent
 - `Schema/source-manifest.jsonl` is stale or absent
 - strict wiki notes are missing required frontmatter
-- compiled notes have broken or missing raw source paths
+- compiled notes have broken or missing `raw_source` paths
 - `source_count` does not match `sources`
-- a manifest entry points to a missing raw source
-- a processed raw source has no wiki coverage
+- a manifest entry points to a missing `wiki/inbox/` source
+- a processed inbox source has no wiki coverage
 - tracked files contain obvious secrets or machine-local path leaks
 
 Manual health checks still matter for:

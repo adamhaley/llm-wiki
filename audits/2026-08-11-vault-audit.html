@@ -1,0 +1,302 @@
+<title>llm-wiki audit — 2026-08-11</title>
+<style>
+:root{
+  --bg:#faf9f6;
+  --surface:#ffffff;
+  --ink:#1d211f;
+  --ink-soft:#4a534d;
+  --muted:#7c847e;
+  --line:#e2e2dc;
+  --accent:#3a6b5c;
+  --accent-soft:#e7efec;
+  --good:#2f7d5c;
+  --good-soft:#e6f2ec;
+  --warn:#a8722c;
+  --warn-soft:#f7ecdd;
+  --fail:#b0473f;
+  --fail-soft:#fbe9e7;
+  --applied:#2f7d5c;
+  --saved:#3a5a8c;
+  --declined:#7c847e;
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "URW Palladio", serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, monospace;
+  --sans: -apple-system, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14171a; --surface:#1b1f22; --ink:#e7e6e1; --ink-soft:#b4b8b3;
+    --muted:#8b928c; --line:#2c3134; --accent:#7fb3a0; --accent-soft:#1e2b27;
+    --good:#6fbf94; --good-soft:#173225; --warn:#e0ab5f; --warn-soft:#332512;
+    --fail:#e0837b; --fail-soft:#391f1d; --applied:#6fbf94; --saved:#8fb0e0; --declined:#8b928c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171a; --surface:#1b1f22; --ink:#e7e6e1; --ink-soft:#b4b8b3;
+  --muted:#8b928c; --line:#2c3134; --accent:#7fb3a0; --accent-soft:#1e2b27;
+  --good:#6fbf94; --good-soft:#173225; --warn:#e0ab5f; --warn-soft:#332512;
+  --fail:#e0837b; --fail-soft:#391f1d; --applied:#6fbf94; --saved:#8fb0e0; --declined:#8b928c;
+}
+:root[data-theme="light"]{
+  --bg:#faf9f6; --surface:#ffffff; --ink:#1d211f; --ink-soft:#4a534d;
+  --muted:#7c847e; --line:#e2e2dc; --accent:#3a6b5c; --accent-soft:#e7efec;
+  --good:#2f7d5c; --good-soft:#e6f2ec; --warn:#a8722c; --warn-soft:#f7ecdd;
+  --fail:#b0473f; --fail-soft:#fbe9e7; --applied:#2f7d5c; --saved:#3a5a8c; --declined:#7c847e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:920px; margin:0 auto; padding:3rem 1.5rem 6rem}
+header.top{margin-bottom:2.5rem}
+.eyebrow{
+  font-family:var(--mono); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 0.6rem;
+}
+h1{
+  font-family:var(--serif); font-size:2.15rem; font-weight:600; margin:0 0 0.4rem;
+  text-wrap:balance; letter-spacing:-0.01em;
+}
+.subtitle{color:var(--ink-soft); font-size:1rem; margin:0}
+
+.scorebar{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:2rem 0 2.5rem;
+}
+.scorebar .cell{background:var(--surface); padding:1.1rem 1.2rem}
+.scorebar .label{font-family:var(--mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:0.35rem}
+.scorebar .value{font-family:var(--serif); font-size:1.5rem; font-variant-numeric:tabular-nums}
+.scorebar .value small{font-family:var(--mono); font-size:0.85rem; color:var(--good); font-weight:600}
+
+.read{
+  background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:2px;
+  padding:1.3rem 1.5rem; margin-bottom:2.5rem;
+}
+.read h2{font-family:var(--mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin:0 0 0.8rem}
+.read p{margin:0 0 0.9rem; max-width:66ch}
+.read p:last-child{margin-bottom:0}
+
+table{width:100%; border-collapse:collapse; font-size:0.88rem}
+.tablewrap{overflow-x:auto; margin-bottom:2.5rem; border:1px solid var(--line); border-radius:8px}
+th,td{padding:0.55rem 0.8rem; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap}
+th{font-family:var(--mono); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); background:var(--surface)}
+td{font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tbody tr:nth-child(odd){background:color-mix(in srgb, var(--surface) 60%, var(--bg))}
+.delta-good{color:var(--good); font-weight:600}
+.delta-none{color:var(--muted)}
+
+h2.section-title{
+  font-family:var(--serif); font-size:1.3rem; margin:2.5rem 0 1rem; padding-bottom:0.5rem;
+  border-bottom:1px solid var(--line);
+}
+
+.framework{margin-bottom:1.6rem; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface)}
+.framework > summary{
+  list-style:none; cursor:pointer; padding:0.9rem 1.1rem; display:flex; align-items:center;
+  justify-content:space-between; gap:1rem; font-family:var(--mono); font-size:0.82rem;
+}
+.framework > summary::-webkit-details-marker{display:none}
+.framework > summary .fname{color:var(--ink); font-weight:600}
+.framework > summary .fcount{color:var(--muted)}
+.framework[open] > summary{border-bottom:1px solid var(--line)}
+.framework .body{padding:0.2rem 1.1rem 1rem}
+.clean{color:var(--good); font-family:var(--mono); font-size:0.85rem; padding:0.6rem 0}
+
+.finding{padding:0.9rem 0; border-bottom:1px solid var(--line)}
+.finding:last-child{border-bottom:none}
+.finding .fhead{display:flex; align-items:baseline; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.35rem}
+.path{font-family:var(--mono); font-size:0.82rem; color:var(--ink)}
+.pill{
+  font-family:var(--mono); font-size:0.65rem; letter-spacing:0.05em; text-transform:uppercase;
+  padding:0.15rem 0.5rem; border-radius:20px; font-weight:600;
+}
+.pill.fail{background:var(--fail-soft); color:var(--fail)}
+.pill.warn{background:var(--warn-soft); color:var(--warn)}
+.pill.applied{background:var(--good-soft); color:var(--applied)}
+.pill.saved{background:color-mix(in srgb, var(--saved) 15%, transparent); color:var(--saved)}
+.pill.declined{background:color-mix(in srgb, var(--declined) 15%, transparent); color:var(--declined)}
+.excerpt{
+  font-family:var(--mono); font-size:0.8rem; color:var(--ink-soft); background:var(--bg);
+  border-radius:4px; padding:0.4rem 0.6rem; margin:0.4rem 0; border:1px solid var(--line);
+}
+.reasoning{font-size:0.9rem; color:var(--ink-soft); margin:0.4rem 0}
+.action{font-size:0.87rem; margin:0.3rem 0 0}
+.action b{color:var(--accent); font-weight:600}
+
+footer{margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--line); color:var(--muted); font-size:0.82rem; font-family:var(--mono)}
+footer a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">os-optimizer · vault audit</p>
+    <h1>llm-wiki — 9-framework audit</h1>
+    <p class="subtitle">/opt/homebrew/var/www/llm-wiki · run 2026-08-11 · 183 files, 15 folders classified</p>
+  </header>
+
+  <div class="scorebar">
+    <div class="cell">
+      <div class="label">Score (F1–G7)</div>
+      <div class="value">88 → 97 <small>+9</small></div>
+    </div>
+    <div class="cell">
+      <div class="label">Findings</div>
+      <div class="value">8 → 3 <small>open</small></div>
+    </div>
+    <div class="cell">
+      <div class="label">Applied / Saved</div>
+      <div class="value">6 <span style="font-size:0.9rem;color:var(--muted)">/ 1</span></div>
+    </div>
+    <div class="cell">
+      <div class="label">Deterministic checks</div>
+      <div class="value" style="color:var(--good)">all ok</div>
+    </div>
+  </div>
+
+  <div class="read">
+    <h2>Architectural read</h2>
+    <p>This vault is unusually well-run for its stage. The instruction layer (<code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>WIKI_SCHEMA.md</code>, 5 <code>SKILL.md</code> files) is tight, non-duplicative, and genuinely follows its own stated writing-style rule — "be factual, compressed, and specific" — with zero hygiene or platitude findings, which is rare.</p>
+    <p>The one real structural gap: the intake pipeline has a working front door but no back door. <code>wiki/inbox-clips/</code> holds 520KB across 15 raw YouTube transcripts, 13 of them over two months stale. <code>overview.md</code> calls this "the strongest current source-like cluster," and the folder's own README says it's "for fast collection, not curation" — but nothing has promoted or discarded them since May. This is the same root cause behind the <code>codette.md</code> orphan (now fixed) and the stale <code>overview.md</code> claim that no entity or synthesis pages exist (they do, three of each) — the promotion/reflection loop the schema describes isn't running regularly. Both are saved to the reorg plan for a deliberate pass.</p>
+  </div>
+
+  <h2 class="section-title">Per-framework results</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Framework</th><th>Findings before</th><th>After</th><th>Fail</th><th>Warn</th><th>Applied</th><th>Saved</th></tr></thead>
+      <tbody>
+        <tr><td>F1 Anthropic CLAUDE.md</td><td>1</td><td>1</td><td>0 → 0</td><td>1 → 1</td><td>0</td><td>1</td></tr>
+        <tr><td>F2 Karpathy Wiki</td><td>3</td><td class="delta-good">0</td><td>0 → 0</td><td>3 → 0</td><td>3</td><td>0</td></tr>
+        <tr><td>F3 Caveman</td><td>0</td><td>0</td><td>0 → 0</td><td>0 → 0</td><td>0</td><td>0</td></tr>
+        <tr><td>F4 Chroma Context Rot</td><td>1</td><td>1</td><td>0 → 0</td><td>1 → 1</td><td>0</td><td>0</td></tr>
+        <tr><td>F5 Anthropic Memory</td><td>1</td><td>1</td><td>0 → 0</td><td>1 → 1</td><td>0</td><td>0</td></tr>
+        <tr><td>F6 Progressive Disclosure</td><td>0</td><td>0</td><td>0 → 0</td><td>0 → 0</td><td>0</td><td>0</td></tr>
+        <tr><td>G7 Hygiene</td><td>2</td><td class="delta-good">0</td><td>1 → 0</td><td>1 → 0</td><td>2</td><td>0</td></tr>
+        <tr><td>F8 Reflection <span style="color:var(--muted)">(not scored)</span></td><td>1</td><td>1</td><td>—</td><td>—</td><td>0</td><td>1†</td></tr>
+        <tr><td>F9 Architecture <span style="color:var(--muted)">(not scored)</span></td><td>3</td><td>2</td><td>—</td><td>—</td><td>2</td><td>1†</td></tr>
+        <tr style="font-weight:600"><td>Total</td><td>12</td><td>6</td><td>1 → 0</td><td>7 → 3</td><td>7</td><td>3</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.82rem;color:var(--muted);margin-top:-1.5rem;margin-bottom:2.5rem">† F8/F9 saved-item counts overlap the same underlying reorg-plan entry (overview.md staleness + n8n/ routing were declined this run, not saved — see finding detail below).</p>
+
+  <h2 class="section-title">Findings</h2>
+
+  <details class="framework" open>
+    <summary><span class="fname">F1 — Anthropic CLAUDE.md</span><span class="fcount">1 finding</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">WIKI_SCHEMA.md</span><span class="pill warn">WARN</span><span class="pill saved">SAVED TO PLAN</span></div>
+        <div class="reasoning">378 lines / 18.6KB — above the ~10KB reference budget. Conditionally loaded (only <code>ingest</code>/<code>promote</code> skills point to it directly) but dense prose+workflow content, not tables. Maps cleanly onto 7 workflow sections that mostly duplicate what the 5 existing skills already summarize.</div>
+        <div class="action">Split into <b>Schema/workflows/{ingest,promote,query,journal,lint,synthesis-prep}.md</b>; trim WIKI_SCHEMA.md to cross-cutting sections; repoint each SKILL.md. Full checklist in the reorg plan.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F2 — Karpathy Wiki</span><span class="fcount">3 findings, all resolved</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/pages/codette.md</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">No inbound link from any durable page — only a one-way journal mention, which <code>wiki_tool.py</code> deliberately excludes from orphan detection, as do auto-generated index.md files (see <code>SKIP_FILENAMES</code>).</div>
+        <div class="action">Added a reciprocal link from <b>hybrid-workflow-philosophy.md</b> (which codette.md already linked out to). Verified: <code>orphan-notes</code> now reports 0.</div>
+      </div>
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/journal/2026-05-24.md</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">Genuinely empty, 0 bytes.</div>
+        <div class="action">Deleted, per the vault's own root-inbox policy for empty files.</div>
+      </div>
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/journal/2025-07-05.md</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="excerpt">"Today's weather in Los Angeles."</div>
+        <div class="reasoning">Pure filler — matches the exact "weather-style repetition" anti-pattern WIKI_SCHEMA.md's own Synthesis Prep Workflow names as noise to filter.</div>
+        <div class="action">Deleted.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F3 — Caveman Compression</span><span class="fcount">clean</span></summary>
+    <div class="body"><div class="clean">✅ No findings. Instruction layer already follows its own "factual, compressed, specific" rule — the only two filler-word hits ("just") were both doing real restrictive work, not padding.</div></div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F4 — Chroma Context Rot</span><span class="fcount">1 finding</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/inbox-clips/ (15 files)</span><span class="pill warn">WARN</span><span class="pill declined">DECLINED</span></div>
+        <div class="reasoning">520KB of raw, verbatim YouTube transcripts ("Uh, that sounds technical," "I'm good, I'm good"). 13 of 15 dated 2026-05-25 to 2026-06-05 — over two months stale. Real token cost if ever bulk-read; violates the folder's own stated "staging lane, not permanent library" policy.</div>
+        <div class="action">Per-clip promote/discard triage — declined this run (semantic, needs your read on each clip). Full file list and suggested batching saved to the reorg plan.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F5 — Anthropic Memory</span><span class="fcount">1 finding</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/inbox-clips/ (same 15 files)</span><span class="pill warn">WARN</span><span class="pill declined">DECLINED</span></div>
+        <div class="reasoning">Same underlying files as F4, different lens: every clip is 2–6x over the ~10KB per-file memory budget. Frontmatter completeness elsewhere is 100% (57/57 curated files) — this is the one real budget violation in the vault.</div>
+        <div class="action">Resolved by the same inbox triage in the reorg plan.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F6 — Progressive Disclosure</span><span class="fcount">clean</span></summary>
+    <div class="body"><div class="clean">✅ No findings. The 5 SKILL.md files are genuinely thin pointers into WIKI_SCHEMA.md/scripts, not duplicates — confirmed by direct read, not just file-length heuristic.</div></div>
+  </details>
+
+  <details class="framework" open>
+    <summary><span class="fname">G7 — General Hygiene</span><span class="fcount">2 findings, both resolved</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/pages/risk-fast-check-static-quiz.md</span><span class="pill fail">FAIL</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">Failed the vault's own <code>wiki_tool.py lint</code>: type <code>page</code> requires <code>sources</code> + <code>source_count</code> frontmatter fields; both were missing entirely.</div>
+        <div class="action">Added <code>sources: []</code> / <code>source_count: 0</code>. Verified: <code>lint=ok</code>.</div>
+      </div>
+      <div class="finding">
+        <div class="fhead"><span class="path">34 files across wiki/, Schema/, root</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">~204 em/en dashes (163 em, 41 en) concentrated in wiki/pages/ prose (monkmagazine-patterns.md, website-design-workflow.md, wiki-as-portfolio.md heaviest).</div>
+        <div class="action">Bulk-replaced outside code fences/inline code/URLs/frontmatter, then ran a corrective pass for capitalization after the inserted periods. 8 residual em dashes remain, all inside code-fence content (correctly protected) or the 3 largest raw transcript files already flagged in the inbox-clips backlog above.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F8 — Reflection <span style="color:var(--muted);font-weight:400">(not scored)</span></span><span class="fcount">1 finding</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/overview.md</span><span class="pill warn">WARN</span><span class="pill declined">DECLINED</span></div>
+        <div class="reasoning">Current State section says "No entity pages yet" and "No syntheses yet" — but wiki/entities/ has 4 real pages and wiki/syntheses/ has 3. Stale since before those were promoted.</div>
+        <div class="action">Rewrite declined this run; step saved to the reorg plan, linked to the inbox-clips triage since promoting more clips will change these counts again.</div>
+      </div>
+    </div>
+  </details>
+
+  <details class="framework">
+    <summary><span class="fname">F9 — Architecture <span style="color:var(--muted);font-weight:400">(not scored)</span></span><span class="fcount">3 findings, 2 resolved</span></summary>
+    <div class="body">
+      <div class="finding">
+        <div class="fhead"><span class="path">n8n/Obsidian Journal.json</span><span class="pill warn">WARN</span><span class="pill declined">DECLINED</span></div>
+        <div class="reasoning">Top-level folder not documented in README.md or WIKI_SCHEMA.md's directory layout — a real automation artifact, just unmapped.</div>
+        <div class="action">Declined this run; documentation-vs-relocation decision saved to the reorg plan.</div>
+      </div>
+      <div class="finding">
+        <div class="fhead"><span class="path">wiki/templates/README.md</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">Folder-index convention (README.md, 64% coverage) was missing here.</div>
+        <div class="action">Added a short purpose README.</div>
+      </div>
+      <div class="finding">
+        <div class="fhead"><span class="path">.agents/skills/README.md</span><span class="pill warn">WARN</span><span class="pill applied">FIXED</span></div>
+        <div class="reasoning">Same gap — 5 SKILL.md files with no folder-level summary.</div>
+        <div class="action">Added a short purpose README.</div>
+      </div>
+    </div>
+  </details>
+
+  <footer>
+    Deterministic verification: <code>doctor</code> · <code>build</code> · <code>lint=ok</code> · <code>orphan-notes=0</code> · <code>source-lint=ok</code> · <code>audit_public=ok</code><br>
+    Reorg plan: <code>audits/2026-08-11-reorg-plan.md</code> · Role registry: <code>.claude/vault-roles.json</code>
+  </footer>
+</div>

@@ -14,10 +14,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-RAW_DIR = ROOT / "raw"
-RAW_PROCESSED_DIR = RAW_DIR / "processed"
-RAW_ASSETS_DIR = RAW_DIR / "assets"
 WIKI_DIR = ROOT / "wiki"
+INBOX_DIR = WIKI_DIR / "inbox"
+INBOX_ASSETS_DIR = INBOX_DIR / "assets"
 SCHEMA_DIR = ROOT / "Schema"
 CATALOG_PATH = WIKI_DIR / "catalog.jsonl"
 MANIFEST_PATH = SCHEMA_DIR / "source-manifest.jsonl"
@@ -25,36 +24,29 @@ LOG_PATH = WIKI_DIR / "log.md"
 
 TODAY = date.today().isoformat()
 
+# Folder -> default note type. entity/source/synthesis notes now live inside
+# pages/ (see ALLOWED_TYPES) and carry an explicit `type:` frontmatter value
+# instead of getting their type from a dedicated folder.
 CATALOG_DIRS = {
-    "sources": "source",
     "topics": "topic",
     "pages": "page",
-    "entities": "entity",
-    "syntheses": "synthesis",
     "crm": "crm",
     "journal": "journal",
 }
 SECTION_LABELS = {
-    "sources": "Sources",
     "topics": "Topics",
     "pages": "Pages",
-    "entities": "Entities",
-    "syntheses": "Syntheses",
     "crm": "CRM",
     "journal": "Journal",
-    "inbox-clips": "Inbox Clips",
 }
 EMPTY_MESSAGES = {
-    "sources": "No source pages yet.",
     "topics": "No topic pages yet.",
     "pages": "No page notes yet.",
-    "entities": "No entity pages yet.",
-    "syntheses": "No synthesis pages yet.",
     "crm": "No CRM pages yet.",
     "journal": "No journal pages yet.",
 }
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm"}
-ALLOWED_TYPES = set(CATALOG_DIRS.values())
+ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis"}
 SKIP_FILENAMES = {"README.md", "index.md"}
 WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "catalog.jsonl"}
 STOPWORDS = {
@@ -241,15 +233,13 @@ def promotion_notes(note_types: set[str] | None = None) -> list[Note]:
 
 def list_source_files() -> list[Path]:
     files: list[Path] = []
-    for base in (RAW_DIR, RAW_PROCESSED_DIR):
-        if not base.exists():
-            continue
-        for path in base.rglob("*"):
+    if INBOX_DIR.exists():
+        for path in INBOX_DIR.rglob("*"):
             if not path.is_file():
                 continue
             if path.name in {"README.md", ".gitkeep"}:
                 continue
-            if RAW_ASSETS_DIR in path.parents:
+            if INBOX_ASSETS_DIR in path.parents:
                 continue
             files.append(path)
     unique = sorted({path.resolve(): path for path in files}.values(), key=lambda item: repo_relative(item))
@@ -305,7 +295,7 @@ def validate_source_path(source_path: str) -> bool:
         relative = path.relative_to(ROOT).as_posix()
     except ValueError:
         return False
-    return relative.startswith("raw/")
+    return relative.startswith("wiki/inbox/")
 
 
 def coverage_map(notes: list[Note]) -> dict[str, list[str]]:
@@ -339,6 +329,13 @@ def generate_catalog() -> list[dict[str, Any]]:
     return rows
 
 
+def inbox_status(path: Path) -> str:
+    if path.suffix.lower() != ".md":
+        return ""
+    frontmatter, _ = parse_frontmatter(path.read_text(encoding="utf-8"))
+    return str(frontmatter.get("status") or "")
+
+
 def generate_manifest(accept_covered: bool) -> list[dict[str, Any]]:
     notes = load_catalog_notes()
     coverage = coverage_map(notes)
@@ -348,8 +345,8 @@ def generate_manifest(accept_covered: bool) -> list[dict[str, Any]]:
         rel_path = repo_relative(path)
         covered_by = coverage.get(rel_path, [])
         was_processed = bool(existing.get(rel_path, {}).get("processed", False))
-        is_processed_path = rel_path.startswith("raw/processed/")
-        processed = was_processed or is_processed_path or (accept_covered and bool(covered_by))
+        is_archived = inbox_status(path) in {"archived", "processed"}
+        processed = was_processed or is_archived or (accept_covered and bool(covered_by))
         rows.append(
             {
                 "path": rel_path,
@@ -473,10 +470,11 @@ def orphan_candidates() -> list[dict[str, str]]:
 def root_inbox_files() -> list[Path]:
     """Loose .md files dropped directly in wiki/ root, awaiting triage.
 
-    This is the in-vault counterpart to raw/: files land here by hand and are
-    expected to be promoted into the correct subdirectory or deleted, not to
-    accumulate indefinitely. Unlike raw/, no frontmatter or naming convention
-    is required here.
+    Distinct from wiki/inbox/: this catches files mistakenly dropped at the
+    vault root rather than the intentional capture zone. Files land here by
+    hand and are expected to be promoted into the correct subdirectory,
+    moved into wiki/inbox/, or deleted, not to accumulate indefinitely. No
+    frontmatter or naming convention is required here.
     """
     if not WIKI_DIR.exists():
         return []
@@ -531,23 +529,20 @@ def build_root_index(notes: list[Note]) -> None:
     ]
 
     ordered_sections = [
-        ("sources", SECTION_LABELS["sources"]),
         ("topics", SECTION_LABELS["topics"]),
         ("pages", SECTION_LABELS["pages"]),
-        ("entities", SECTION_LABELS["entities"]),
-        ("syntheses", SECTION_LABELS["syntheses"]),
         ("crm", SECTION_LABELS["crm"]),
         ("journal", SECTION_LABELS["journal"]),
-        ("inbox-clips", SECTION_LABELS["inbox-clips"]),
     ]
+
+    lines.append("### Inbox")
+    lines.append("")
+    lines.append("- [Inbox](inbox/README.md): staging area for raw captures and Web Clipper clips before triage. Not catalog-indexed; not linted.")
+    lines.append("")
 
     for folder_name, label in ordered_sections:
         lines.append(f"### {label}")
         lines.append("")
-        if folder_name == "inbox-clips":
-            lines.append("- [Inbox Clips](inbox-clips/README.md): staging area for Obsidian Web Clipper captures before normalization or promotion.")
-            lines.append("")
-            continue
         lines.append(f"- [{label} Index]({folder_name}/index.md)")
         entries = grouped.get(folder_name, [])
         if not entries:
@@ -572,15 +567,11 @@ def build_root_index(notes: list[Note]) -> None:
 
 def command_doctor(_: argparse.Namespace) -> int:
     required = [
-        RAW_DIR,
-        RAW_PROCESSED_DIR,
         WIKI_DIR,
+        INBOX_DIR,
         SCHEMA_DIR,
-        WIKI_DIR / "sources",
         WIKI_DIR / "topics",
         WIKI_DIR / "pages",
-        WIKI_DIR / "entities",
-        WIKI_DIR / "syntheses",
         WIKI_DIR / "crm",
         WIKI_DIR / "journal",
     ]
@@ -604,9 +595,7 @@ def command_build(_: argparse.Namespace) -> int:
     for note in notes:
         folder_name = Path(note.rel_path).parts[1]
         grouped[folder_name].append(note)
-    for folder_name, default_type in CATALOG_DIRS.items():
-        if folder_name == "inbox-clips":
-            continue
+    for folder_name in CATALOG_DIRS:
         build_folder_index(folder_name, grouped.get(folder_name, []))
     build_root_index(notes)
     print(f"built catalog={repo_relative(CATALOG_PATH)} notes={len(rows)}")

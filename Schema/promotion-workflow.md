@@ -4,13 +4,11 @@ Promotion is intentionally agent-driven. The tooling may surface candidate phras
 
 ## Goal
 
-Turn durably useful ideas from `wiki/journal/`, `wiki/sources/`, and existing compiled notes into focused pages under:
+Turn durably useful ideas from `wiki/journal/`, `wiki/inbox/`, and existing compiled notes into focused pages under:
 
-- `wiki/topics/`
-- `wiki/pages/`
-- `wiki/entities/`
+- `wiki/topics/` (canonical hubs)
+- `wiki/pages/` (everything else — `type: page`, `entity`, or `synthesis`)
 - `wiki/crm/`
-- `wiki/syntheses/`
 
 ## Deterministic Helper Signals
 
@@ -53,13 +51,13 @@ Do not promote when:
 
 ## Promotion Shapes
 
-Use the destination based on semantics:
+Use the destination and `type:` frontmatter based on semantics:
 
 - `wiki/topics/`: canonical hubs for durable themes, practices, tools, and philosophies; recurrence is helpful but not required when the topic is important
-- `wiki/pages/`: supporting durable notes linked from hubs when the note is useful but not itself a canonical topic
-- `wiki/entities/`: people, companies, tools, places
-- `wiki/crm/`: people with relationship context
-- `wiki/syntheses/`: a higher-order memo, decision, comparison, or summary; it may span multiple entries or capture one high-leverage conclusion
+- `wiki/pages/` with `type: page`: supporting durable notes linked from hubs when the note is useful but not itself a canonical topic
+- `wiki/pages/` with `type: entity`: people, companies, tools, places (not contacts — see `wiki/crm/`)
+- `wiki/crm/`: people with relationship context — kept as its own folder, not `type: entity`, because promotion here is gated behind human review for sensitive claims
+- `wiki/pages/` with `type: synthesis`: a higher-order memo, decision, comparison, or summary; it may span multiple entries or capture one high-leverage conclusion
 
 ## Linking Guidance
 
@@ -79,7 +77,7 @@ If a durable page is grounded only in journal entries:
 
 If a durable page is grounded in external source material:
 
-- keep `sources` populated with raw file paths
+- keep `sources` populated with `wiki/inbox/` file paths
 - keep `source_count` accurate
 
 ## Finish
@@ -100,7 +98,7 @@ Use `scripts/run_autonomous_promotion.sh` from cron or another scheduler when a 
 
 The runner:
 
-- creates a synthesis report only when journal entries or inbox clips changed
+- creates a synthesis report only when journal entries or `wiki/inbox/` items changed
 - skips safely when there is no new material
 - writes a promotion prompt from the latest report
 - sends that prompt to `AUTOPROMOTE_COMMAND` via stdin

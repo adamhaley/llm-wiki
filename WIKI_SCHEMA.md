@@ -4,22 +4,25 @@ This file defines how agents should maintain this repository as a personal "LLM 
 
 ## Core Model
 
-There are three layers:
+There are two layers, both inside the Obsidian vault so both reach every synced device (including a headless VPS sync client):
 
-1. `raw/`: source material awaiting or after ingestion.
-2. `wiki/`: the local Obsidian vault and LLM-maintained markdown knowledge base.
-3. `WIKI_SCHEMA.md`: the maintenance contract for ingestion, querying, linting, and the repo-versus-vault boundary.
+1. `wiki/inbox/`: raw and unprocessed material awaiting triage — Web Clipper captures, dropped-in raw sources, anything not yet promoted.
+2. `wiki/{topics,pages,crm,journal}/`: the LLM-maintained, durable markdown knowledge base.
 
-The goal is not to re-read every raw source from scratch on every question. The goal is to incrementally compile source material into a persistent, interlinked markdown wiki.
+`WIKI_SCHEMA.md` itself is the maintenance contract for ingestion, querying, linting, and the repo-versus-vault boundary.
+
+The goal is not to re-read every raw capture from scratch on every question. The goal is to incrementally compile captured material into a persistent, interlinked markdown wiki.
+
+**Historical note:** earlier versions of this schema kept raw source material in a `raw/` directory outside the Obsidian vault, on the theory that raw material was git-versioned and immutable while `wiki/` was Sync-versioned and mutable. That split blocked a real requirement — capturing on one device (open at irregular hours) and processing on another (always-on) — because material outside the vault can never reach Obsidian Sync, full stop. `raw/` was retired and folded into `wiki/inbox/` for this reason. If you see references to `raw/` in older log entries or archived audit reports, they predate this change.
 
 ## Ownership Rules
 
-- The human curates what enters `raw/`.
-- The agent reads `raw/` and maintains `wiki/`.
-- Raw source bodies are immutable. Do not edit them in place.
-- `wiki/` is editable. Prefer incremental edits over wholesale rewrites.
+- The human curates what enters `wiki/inbox/`.
+- The agent reads `wiki/inbox/` and maintains the rest of `wiki/`.
+- `wiki/inbox/` items marked `status: archived` are provenance records (e.g. a promoted source's `raw_source` target) — do not edit their content in place, only their status.
+- The rest of `wiki/` is editable. Prefer incremental edits over wholesale rewrites.
 - Git is for versioned maintenance behavior such as scripts, schemas, agent instructions, templates, and selected shared vault configuration.
-- Obsidian Sync or another vault-native transport should be the primary live sync path for note content when the vault is used across devices.
+- Obsidian Sync is the primary live sync path for all vault content, including `wiki/inbox/`.
 - Durable note content under `wiki/` may be git-ignored by default.
 - The index and log are mandatory maintenance files.
 - The deterministic toolchain lives in `scripts/wiki_tool.py` and `scripts/audit_public.py`.
@@ -42,29 +45,20 @@ The goal is not to re-read every raw source from scratch on every question. The 
 
 ## Directory Conventions
 
-### `raw/`
-
-- `raw/`: newly dropped source material awaiting ingest.
-- `raw/processed/`: source material that has already been ingested.
-- `raw/assets/`: local images, figures, screenshots, or attachments.
-- `raw/` is intentionally outside the Obsidian vault and may be git-ignored except for tracked skeleton files.
-
 ### `wiki/`
 
 - `wiki/.obsidian/`: vault-local Obsidian settings.
-- `wiki/` root (loose files): an in-vault inbox for hand-dropped material — the counterpart to `raw/`, but inside the Obsidian vault instead of outside it. The user occasionally pastes or saves files directly at the vault root between sessions. No frontmatter or naming convention is required there. Run `python3 scripts/wiki_tool.py root-inbox` to list what's waiting and triage each file into the correct subdirectory (or delete it if it's debris, e.g. an empty stub). Don't leave files there indefinitely.
-- `wiki/inbox-clips/`: Obsidian-visible landing zone for Web Clipper captures.
+- `wiki/` root (loose files): an in-vault inbox for hand-dropped material, distinct from `wiki/inbox/`. The user occasionally pastes or saves files directly at the vault root between sessions. No frontmatter or naming convention is required there. Run `python3 scripts/wiki_tool.py root-inbox` to list what's waiting and triage each file into the correct subdirectory or into `wiki/inbox/` (or delete it if it's debris, e.g. an empty stub). Don't leave files there indefinitely.
+- `wiki/inbox/`: single landing zone for everything not yet triaged — raw source material and Web Clipper captures alike. Not catalog-indexed, not linted. See `wiki/inbox/README.md`.
+- `wiki/inbox/assets/`: local images, figures, screenshots, or attachments.
 - `wiki/index.md`: vault catalog and starting point for navigation.
 - `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
-- `wiki/sources/`: one page per source with provenance and extracted takeaways.
-- `wiki/topics/`: canonical topic hubs for concepts, themes, or subject areas.
-- `wiki/pages/`: general durable pages that support or elaborate on canonical topics without necessarily being topic hubs themselves.
-- `wiki/entities/`: named entities such as people, companies, places, or tools.
-- `wiki/syntheses/`: comparisons, decision memos, query outputs worth preserving.
+- `wiki/topics/`: canonical topic hubs — the navigational index-of-indexes layer for concepts, themes, or subject areas. Kept as a separate folder because it plays a distinct hub/leaf role, not just a content-type distinction.
+- `wiki/pages/`: durable compiled knowledge — supporting notes, named entities, ingested sources, and syntheses all live here now, differentiated by `type:` frontmatter (`page`, `entity`, `source`, `synthesis`) rather than by folder. See `wiki/pages/README.md`.
 - `wiki/templates/`: starter templates only.
 - `wiki/journal/`: dated notes grounded in the wiki and past entries.
-- `wiki/crm/`: person records and relationship context.
+- `wiki/crm/`: person records and relationship context. Kept as a separate folder (not `type: entity` inside `wiki/pages/`) because promotion here is gated behind human review for sensitive claims — a privacy boundary, not just a category.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
 - Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
 
@@ -75,17 +69,15 @@ The goal is not to re-read every raw source from scratch on every question. The 
 
 ## Capture Policy
 
-Use the destination based on the kind of material, not the transport that delivered it.
+Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source material and Web Clipper captures use the same folder now, since both are "not yet triaged" regardless of how they arrived.
 
-- Put external source material in `raw/`.
-- Put hand-dropped material that lands inside the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
-- Put Web Clipper captures that benefit from immediate visibility in `wiki/inbox-clips/`.
+- Put external source material and Web Clipper captures in `wiki/inbox/`.
+- Put hand-dropped material that lands elsewhere in the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
 - Put normalized personal reflections, dictated thoughts, and daily notes in `wiki/journal/`.
-- Put durable synthesized knowledge in `wiki/`.
+- Put durable synthesized knowledge in `wiki/pages/` or `wiki/topics/`.
 - Put person-specific records in `wiki/crm/`.
 
-Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `raw/` first unless the raw transcript itself is worth preserving as source material.
-Web Clipper captures land in `wiki/inbox-clips/` and promote directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` — the same path as journal entries. Do not route inbox-clips through `raw/`; `raw/` is a machine-local airlock for external material dropped onto a specific machine, not a target for vault-internal promotion.
+Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `wiki/inbox/` first unless the raw transcript itself is worth preserving as source material.
 
 ## Sync Boundary
 
@@ -108,7 +100,7 @@ Web Clipper captures land in `wiki/inbox-clips/` and promote directly into `wiki
 - When adding a new page, add at least one inbound path by updating another page to point to it.
 - Prefer explicit links over relying on text search alone.
 
-Because `raw/` lives outside the Obsidian vault on purpose, provenance to raw files should be preserved primarily in frontmatter metadata and generated manifests, not only as clickable Obsidian links.
+Provenance to inbox files should be preserved primarily in frontmatter metadata (`raw_source`, `sources`) and generated manifests, not only as clickable Obsidian links, since inbox items may be deleted once fully promoted.
 
 ## Page Shape
 
@@ -141,11 +133,11 @@ Not every page needs every section. Keep pages compact and composable.
 
 ## Source Page Requirements
 
-Every ingested source should generally get a page in `wiki/sources/` that records:
+Every ingested source should generally get a `type: source` page in `wiki/pages/` that records:
 
 - what the source is
 - when it was ingested
-- where the raw file lives
+- where the raw file lives (`raw_source`, pointing into `wiki/inbox/`)
 - the key claims or takeaways
 - related entities, topics, and syntheses
 - unresolved contradictions or uncertainties
@@ -168,7 +160,7 @@ tags:
 ---
 ```
 
-Compiled durable notes in `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, and `wiki/crm/` should include:
+Compiled durable notes in `wiki/topics/`, `wiki/pages/` (any of `type: page`, `entity`, `synthesis`), and `wiki/crm/` should include:
 
 ```yaml
 ---
@@ -183,17 +175,17 @@ tags:
 ---
 ```
 
-The `sources` field should list repo-relative raw file paths such as `raw/article.md` or `raw/processed/article.md`. Pages promoted from inbox clips or journal entries may omit `sources` or reference the originating clip or journal file path instead.
+The `sources` field should list repo-relative file paths such as `wiki/inbox/article.md`. Pages promoted from inbox material or journal entries may omit `sources` or reference the originating file path instead.
 
 ## Ingest Workflow
 
-The ingest path depends on where the source material lives.
+Everything in `wiki/inbox/` — raw source material and Web Clipper captures alike — follows the same path now. Whether a given item gets a dedicated `type: source` page or is promoted directly depends on the material, not on which sub-workflow it arrived through.
 
-### Ingesting from `raw/`
+### Ingesting / Promoting from `wiki/inbox/`
 
-1. Read the source from `raw/`.
+1. Read the item from `wiki/inbox/`.
 2. Identify whether it is genuinely new, an update, or redundant.
-3. Create or update the source page in `wiki/sources/`.
+3. If it warrants standalone provenance tracking: create or update a `type: source` page in `wiki/pages/` with `raw_source` pointing at the `wiki/inbox/` file. If it's more like a journal or clip insight: promote directly into `wiki/topics/`, `wiki/pages/`, or `wiki/crm/` without a separate source page.
 4. Update any affected topic, entity, overview, or synthesis pages.
 5. Add or revise cross-links.
 6. Run `python3 scripts/wiki_tool.py build`.
@@ -202,30 +194,15 @@ The ingest path depends on where the source material lives.
 9. Run `python3 scripts/wiki_tool.py source-lint`.
 10. Update `wiki/index.md` if needed beyond the generated structure.
 11. Append an entry to `wiki/log.md`.
-12. Move the processed source into `raw/processed/` unless the user wants it left in place.
+12. Once an inbox item is fully processed: delete it if it has no durable signal beyond what's now promoted, or mark it `status: archived` in frontmatter if a source page still needs it for `raw_source` provenance.
+
+Prefer processing related items in one themed pass instead of handling every inbox item as an isolated page-creation event — prefer one synthesis or targeted update to existing durable pages over many thin pages when multiple items reinforce the same idea.
 
 ### Triaging the `wiki/` Root Inbox
 
 1. Run `python3 scripts/wiki_tool.py root-inbox` to list loose files at the vault root.
-2. For each file, decide: promote into the matching subdirectory (`wiki/pages/`, `wiki/journal/`, etc.), or delete it if it's debris (e.g. an empty stub from a failed save).
-3. Treat the content the same way you would a journal entry or inbox clip for promotion purposes — no `raw/` detour required.
-4. Empty files (`bytes: 0` in the command output) can generally be deleted without asking, unless the filename suggests it's a placeholder the user is actively about to fill in.
-
-### Promoting from `wiki/inbox-clips/`
-
-Inbox clips are already inside the vault. They do not pass through `raw/` and do not get source pages in `wiki/sources/`. Treat them like journal entries: read for durable signal, then promote directly into the wiki.
-
-1. Treat `wiki/inbox-clips/` as a staging lane, not a permanent library.
-2. Prefer processing clips in related clusters when practical instead of handling every clip as an isolated page-creation event.
-3. Read the clip.
-4. Identify whether the material is genuinely new, an update to an existing page, redundant, or better deferred for a later themed pass.
-5. Prefer one synthesis or targeted update to existing durable pages over many thin pages when multiple clips reinforce the same idea.
-6. Promote durable claims directly into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/syntheses/`, or `wiki/crm/` as appropriate.
-7. Add or revise cross-links.
-8. Run `python3 scripts/wiki_tool.py build`.
-9. Run `python3 scripts/wiki_tool.py lint`.
-10. Update `wiki/index.md` if needed beyond the generated structure.
-11. Append an entry to `wiki/log.md`.
+2. For each file, decide: promote into the matching subdirectory (`wiki/pages/`, `wiki/journal/`, etc.), move into `wiki/inbox/` for later triage, or delete it if it's debris (e.g. an empty stub from a failed save).
+3. Empty files (`bytes: 0` in the command output) can generally be deleted without asking, unless the filename suggests it's a placeholder the user is actively about to fill in.
 
 Default ingest posture:
 
@@ -240,9 +217,9 @@ When asked a substantive question:
 1. Read `wiki/index.md` first.
 2. Run `python3 scripts/wiki_tool.py search-catalog --query "topic"` when the topic is broad or ambiguous.
 3. Read the most relevant linked pages in `wiki/`.
-4. Open raw sources only when compiled notes are insufficient or source-level verification is needed.
+4. Open `wiki/inbox/` material only when compiled notes are insufficient or source-level verification is needed.
 5. Synthesize an answer from the wiki, citing the pages used.
-6. If the answer creates durable value, offer or perform filing it into `wiki/syntheses/`.
+6. If the answer creates durable value, offer or perform filing it into `wiki/pages/` as `type: synthesis`.
 7. Append to `wiki/log.md` only if the query materially changed the vault.
 
 ## Journal Workflow
@@ -258,20 +235,19 @@ When asked to create or update a journal entry:
 
 ## Promotion Workflow
 
-When asked to promote ideas from journal or source material into durable wiki pages:
+When asked to promote ideas from journal or inbox material into durable wiki pages:
 
 1. Start with helper signals such as:
-   - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
-   - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types inbox-clips`
-   - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
-   - `python3 scripts/wiki_tool.py orphan-notes`
+ - `python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal`
+ - `python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2`
+ - `python3 scripts/wiki_tool.py orphan-notes`
 2. Treat these outputs as candidate prompts, not automatic truth.
-3. Decide whether the material belongs in `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-4. Promote based on durable future utility, not only repetition. A one-off source, clip, or journal insight can deserve promotion when it is reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later.
-5. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for supporting durable pages linked from those hubs.
+3. Decide whether the material belongs in `wiki/topics/` (hub), `wiki/pages/` (as `type: page`, `entity`, or `synthesis`), or `wiki/crm/`.
+4. Promote based on durable future utility, not only repetition. A one-off inbox item, clip, or journal insight can deserve promotion when it is reference-grade, decision-relevant, project-relevant, rare, clarifying, or likely to save rediscovery later.
+5. Use `wiki/topics/` for canonical hub pages and `wiki/pages/` for everything else durable, differentiated by `type:` frontmatter.
 6. Prefer updating an existing canonical page over creating a new one.
-7. Use cross-links to amplify signal selectively. Prefer clip -> durable page and journal -> durable page synthesis over dense direct link spam between every related clip and journal entry.
-8. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external raw sources.
+7. Use cross-links to amplify signal selectively. Prefer inbox -> durable page and journal -> durable page synthesis over dense direct link spam between every related item and journal entry.
+8. For journal-only promotions, cite relevant journal entries in the body and keep claims modest unless supported by external sources.
 9. Run `python3 scripts/wiki_tool.py build`.
 10. Run `python3 scripts/wiki_tool.py lint`.
 11. Run `python3 scripts/audit_public.py`.
@@ -297,6 +273,18 @@ scripts/run_autonomous_promotion.sh
 
 That runner expects `AUTOPROMOTE_COMMAND` to name the local headless agent command that will read the generated prompt from stdin.
 
+## Weekly Grooming (VPS cron)
+
+`scripts/run_weekly_grooming.sh` is a broader pass than `run_autonomous_promotion.sh` — deterministic baseline + lint fixes + orphan fixes + root-inbox triage + `wiki/inbox/` promotion + `overview.md` freshness check, in one run. Designed to run on a schedule against the vault's headless-Obsidian-sync copy (an always-on machine, not the primary editing device), so `wiki/inbox/` gets processed regularly even when no one opens the vault for weeks.
+
+It expects `GROOMING_AGENT_COMMAND` to name the local headless agent command that will read the generated prompt from stdin, same pattern as `AUTOPROMOTE_COMMAND`.
+
+Example weekly cron (Sunday 3am local):
+
+```cron
+0 3 * * 0 cd /path/to/llm-wiki && GROOMING_AGENT_COMMAND='your-agent-command' scripts/run_weekly_grooming.sh
+```
+
 ## Synthesis Prep Workflow
 
 When you want a deterministic review brief before doing higher-judgment synthesis work:
@@ -304,18 +292,18 @@ When you want a deterministic review brief before doing higher-judgment synthesi
 1. Run `python3 scripts/synthesis_report.py`.
 2. Open the newest report under `wiki/pages/reports/`.
 3. Review:
-   - new or changed journal entries
-   - new or changed inbox clips
-   - repeated names and phrases
-   - possible cross-note connections
-   - orphan durable notes
+ - new or changed journal entries
+ - new or changed `wiki/inbox/` items
+ - repeated names and phrases
+ - possible cross-note connections
+ - orphan durable notes
 4. Audit the report quality before trusting it:
-   - are the surfaced names and phrases materially useful?
-   - is the output dominated by filler, transcript boilerplate, or weather-style repetition?
-   - did it miss any obvious recurring topic, durable one-off reference, entity, or connection?
+ - are the surfaced names and phrases materially useful?
+ - is the output dominated by filler, transcript boilerplate, or weather-style repetition?
+ - did it miss any obvious recurring topic, durable one-off reference, entity, or connection?
 5. If the report is structurally noisy or repeatedly misses clear patterns, prefer tuning `scripts/synthesis_report.py` before doing large-scale promotion.
 6. Treat the report as synthesis input, not as a substitute for human or agent judgment.
-7. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+7. Promote the strongest findings into `wiki/topics/`, `wiki/pages/`, or `wiki/crm/`.
 
 ## Lint Workflow
 
@@ -328,9 +316,10 @@ When asked to lint or health-check the wiki, look for:
 - missing high-value cross-links
 - claims, references, or insights that deserve their own page because they are recurring or durably useful
 - index entries that are missing or out of date
-- journal insights or inbox clips that deserve promotion into the wiki
+- journal insights or `wiki/inbox/` items that deserve promotion into the wiki
 - CRM records that are mentioned elsewhere but do not exist yet
 - untriaged files sitting at the `wiki/` root inbox
+- `wiki/inbox/` items past a couple weeks old with no triage decision made
 
 Prefer producing concrete fixes, not only observations.
 
@@ -348,7 +337,6 @@ Useful non-mutating promotion helpers:
 
 ```bash
 python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types journal
-python3 scripts/wiki_tool.py promotion-candidates --mode names --note-types inbox-clips
 python3 scripts/wiki_tool.py promotion-candidates --mode phrases --note-types journal --min-count 2
 python3 scripts/wiki_tool.py orphan-notes
 python3 scripts/wiki_tool.py root-inbox

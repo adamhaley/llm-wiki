@@ -2,22 +2,21 @@
 
 This repository implements a local "LLM wiki" in the style described by Andrej Karpathy.
 
-- `raw/` holds source material for ingestion.
+- `wiki/inbox/` holds raw source material and Web Clipper captures awaiting triage — inside the Obsidian vault, so it reaches every synced device.
 - `wiki/` is the markdown wiki and the Obsidian vault.
 - `WIKI_SCHEMA.md` defines the operating rules for agentic maintenance.
 - `scripts/wiki_tool.py` provides deterministic build, lint, and source coverage checks.
 
 The repository root is agent-facing infrastructure and versioned system behavior.
-The Obsidian-visible knowledge base lives under `wiki/`, but the vault content is intended to sync via Obsidian Sync rather than git.
-`raw/` is intentionally noisy and is git-ignored except for its tracked skeleton files.
-Most note content under `wiki/` should also remain git-ignored by default, with the repo tracking only schemas, scripts, agent instructions, templates, and a small amount of vault configuration.
+The Obsidian-visible knowledge base lives under `wiki/`, and the vault content — including `wiki/inbox/` — is intended to sync via Obsidian Sync rather than git.
+Most note content under `wiki/` should remain git-ignored by default, with the repo tracking only schemas, scripts, agent instructions, templates, and a small amount of vault configuration.
 
 The intent is simple:
 
-1. Add source material to `raw/`.
-2. Ask an agent to ingest it into `wiki/`.
+1. Add source material or Web Clipper captures to `wiki/inbox/`.
+2. Ask an agent to ingest or promote it into the rest of `wiki/`.
 3. Browse or edit the wiki in Obsidian by opening `wiki/` as the vault.
-4. Let Obsidian Sync handle live content sync across devices.
+4. Let Obsidian Sync handle live content sync across devices — including a headless VPS instance for scheduled grooming.
 5. Use git to version the maintenance layer that drives the vault, not the vault's day-to-day content.
 
 For low-friction operation, capture can be followed by scheduled agent work rather than manual review. `scripts/run_synthesis_report.sh` generates changed-material briefs, and `scripts/run_autonomous_promotion.sh` can hand those briefs to a configured headless agent via `AUTOPROMOTE_COMMAND` so high-confidence durable items are promoted without making the human the default gate.
@@ -60,21 +59,15 @@ Promotion helpers:
 AGENTS.md
 CLAUDE.md
 WIKI_SCHEMA.md
-raw/
-  README.md      intake policy for raw capture
-  processed/     source files after ingestion
-  assets/        downloaded images and attachments referenced by sources
 wiki/
   .obsidian/     vault settings; only stable shared config is tracked
-  inbox-clips/   Obsidian-visible landing zone for Web Clipper captures
+  inbox/         raw source material and Web Clipper captures, not yet triaged
+    assets/      downloaded images and attachments
   index.md       local vault catalog, typically not tracked
   log.md         local append-only vault activity log, typically not tracked
   overview.md    local top-level map of the knowledge base
-  sources/       one page per ingested source
   topics/        canonical topic hubs
-  pages/         supporting durable pages linked from topics
-  entities/      people, orgs, tools, places, etc.
-  syntheses/     comparisons, query results, and higher-level analyses
+  pages/         everything else durable: type: page, entity, source, or synthesis
   templates/     starter templates that remain tracked
   journal/       dated reflective entries
   crm/           contact records and relationship notes
@@ -82,12 +75,10 @@ wiki/
 
 ## Suggested Workflow
 
-1. Put a new article, note, PDF, transcript, or markdown file directly in `raw/`.
-2. Use `wiki/inbox-clips/` for Web Clipper captures that should stay visible in Obsidian.
-3. Ask the agent to ingest a specific source into `wiki/`.
-4. Move or normalize useful clipped content from `wiki/inbox-clips/` into `raw/` or directly into the wiki, depending on the workflow.
-5. Review the proposed or completed updates in `wiki/`.
-6. Move the source into `raw/processed/` once it has been ingested when you want to retain a processed raw record.
+1. Put a new article, note, PDF, transcript, or Web Clipper capture directly in `wiki/inbox/`.
+2. Ask the agent to ingest or promote a specific item from `wiki/inbox/` into the rest of `wiki/`.
+3. Review the proposed or completed updates in `wiki/`.
+4. Once fully promoted, delete the `wiki/inbox/` item, or mark it `status: archived` in frontmatter if a source page's `raw_source` still needs it for provenance.
 
 ## Sync Boundary
 

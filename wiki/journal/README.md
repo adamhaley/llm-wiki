@@ -6,9 +6,9 @@ A typical pattern is one markdown file per day or per session, grounded in relat
 
 ## Filename Convention
 
-- Use `YYYY-MM-DD.md` with zero-padded month and day, directly in this directory. No nested per-source subdirectories (e.g. no `telegram/YYYY/`) — that pattern was tried and abandoned as over-engineered relative to the actual sync-collision risk.
+- Use `YYYY-MM-DD.md` with zero-padded month and day, directly in this directory. No nested per-source subdirectories (e.g. No `telegram/YYYY/`). That pattern was tried and abandoned as over-engineered relative to the actual sync-collision risk.
 - Telegram (or other automated) captures should land as a timestamped section appended to the day's file, the same shape as a hand-written multi-entry day: a `H:MM AM/PM` header line followed by the entry text. Use `source: telegram-voice` in frontmatter when the whole file originated from a single automated capture; for mixed days, a body-level note is enough.
-- If automation cannot safely append to a shared daily file directly (e.g. it cannot read-modify-write without risking a collision with a live Obsidian Sync edit), it may land a standalone `YYYY-MM-DDTHH-MM-SS.md` capture file flat in this directory instead — never nested. Fold same-day capture files into the canonical `YYYY-MM-DD.md` during routine review and delete the capture file once folded.
+- If automation cannot safely append to a shared daily file directly (e.g. It cannot read-modify-write without risking a collision with a live Obsidian Sync edit), it may land a standalone `YYYY-MM-DDTHH-MM-SS.md` capture file flat in this directory instead. Never nested. Fold same-day capture files into the canonical `YYYY-MM-DD.md` during routine review and delete the capture file once folded.
 - Keep non-journal experiments and import debris out of this directory.
 
 ## Light Frontmatter Convention

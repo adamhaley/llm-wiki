@@ -1,19 +1,16 @@
 # Naming Conventions
 
-- Use lowercase kebab-case filenames for durable pages and raw captures.
+- Use lowercase kebab-case filenames for durable pages and inbox captures.
 - Prefer one canonical page per concept.
 - Keep page H1s human-readable even when the filename is terse.
 - Use singular durable page names unless the note is naturally plural.
-- Keep source filenames stable after ingest when possible. If you move a file into `raw/processed/`, update the corresponding wiki metadata paths.
+- Keep inbox filenames stable after ingest when possible. If you mark a `wiki/inbox/` file `status: archived`, update the corresponding wiki metadata paths (`raw_source`) if the filename changes.
 
 Directory intent:
 
-- `raw/`: external source material not visible in the Obsidian vault
-- `wiki/` root: in-vault inbox for hand-dropped files awaiting triage — the `raw/` equivalent inside the vault. List with `python3 scripts/wiki_tool.py root-inbox`. No naming convention required.
-- `wiki/sources/`: source summaries and provenance pages
+- `wiki/inbox/`: raw source material and Web Clipper captures, not yet triaged; inside the vault so Sync carries it everywhere
+- `wiki/` root: in-vault inbox for hand-dropped files awaiting triage, distinct from `wiki/inbox/`. List with `python3 scripts/wiki_tool.py root-inbox`. No naming convention required.
 - `wiki/topics/`: canonical topic hubs
-- `wiki/pages/`: supporting durable pages related to canonical topics
-- `wiki/entities/`: people, orgs, places, tools
-- `wiki/syntheses/`: comparisons, decisions, query outputs worth keeping
+- `wiki/pages/`: everything else durable — supporting pages (`type: page`), named entities (`type: entity`), source summaries (`type: source`), and syntheses (`type: synthesis`) — differentiated by frontmatter, not by folder
 - `wiki/crm/`: named contact records
 - `wiki/journal/`: dated reflection and capture notes

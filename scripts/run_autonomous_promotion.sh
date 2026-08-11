@@ -76,7 +76,7 @@ Use this synthesis report as the starting point:
 
 $REPORT_PATH
 
-Autonomously promote high-confidence durable material into wiki/topics, wiki/pages, wiki/entities, wiki/crm, or wiki/syntheses. Promotion is based on durable future utility, not only recurrence. One-off but reference-grade, decision-relevant, project-relevant, rare, clarifying, or rediscovery-saving items may be promoted.
+Autonomously promote high-confidence durable material into wiki/topics, wiki/pages (type: page, entity, or synthesis), or wiki/crm. Promotion is based on durable future utility, not only recurrence. One-off but reference-grade, decision-relevant, project-relevant, rare, clarifying, or rediscovery-saving items may be promoted.
 
 Prefer updating existing canonical pages over creating duplicates. Preserve provenance. Keep claims modest when grounded only in journal entries or clips. Add useful links, but avoid backlink spam.
 

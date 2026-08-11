@@ -2,12 +2,12 @@
 
 ## Ingest A New Source
 
-1. Put the source file in `raw/`.
-2. Run `python3 scripts/wiki_tool.py source-delta` to see untracked raw sources.
+1. Put the source file in `wiki/inbox/`.
+2. Run `python3 scripts/wiki_tool.py source-delta` to see untracked inbox sources.
 3. Create or update:
-   - one source page in `wiki/sources/`
+   - one `type: source` page in `wiki/pages/`
    - any affected topic, entity, synthesis, or CRM pages
-4. Add the raw path into compiled note `sources`.
+4. Add the `wiki/inbox/` path into compiled note `sources`.
 5. Run:
 
 ```bash
@@ -25,13 +25,13 @@ python3 scripts/audit_public.py
 1. Open `wiki/index.md`.
 2. Run `python3 scripts/wiki_tool.py search-catalog --query "topic"`.
 3. Read the most relevant wiki pages.
-4. Open raw sources only if the compiled notes are insufficient or the user asks for source-level verification.
-5. If the answer becomes durable knowledge, file it into `wiki/syntheses/` and rerun the maintenance commands.
+4. Open `wiki/inbox/` sources only if the compiled notes are insufficient or the user asks for source-level verification.
+5. If the answer becomes durable knowledge, file it into `wiki/pages/` as `type: synthesis` and rerun the maintenance commands.
 
-## Move A Processed Source
+## Archive A Processed Source
 
-1. Move the source file from `raw/` to `raw/processed/`.
-2. Keep the existing `raw/...` reference updated in any affected wiki note metadata.
+1. Mark the `wiki/inbox/` source file `status: archived` in frontmatter (or delete it if the source page's `raw_source` field isn't needed for provenance).
+2. Keep the existing `wiki/inbox/...` reference updated in any affected wiki note metadata if the filename changed.
 3. Run `python3 scripts/wiki_tool.py source-scan --update --accept-covered`.
 4. Run `python3 scripts/wiki_tool.py source-lint`.
 
@@ -47,8 +47,8 @@ python3 scripts/wiki_tool.py orphan-notes
 
 2. Review the suggested names and phrases as prompts, not decisions.
 3. Choose only durable concepts, people, projects, references, or syntheses worth keeping. Recurrence helps, but a one-off item can qualify when it has future retrieval, decision, project, or reference value.
-4. Create or update canonical notes in `wiki/topics/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
-5. Use `wiki/pages/` for supporting durable notes that belong under a topic hub rather than acting as peer topics.
+4. Create or update canonical notes in `wiki/topics/`, `wiki/pages/` (`type: entity` or `synthesis`), or `wiki/crm/`.
+5. Use `wiki/pages/` with `type: page` for supporting durable notes that belong under a topic hub rather than acting as peer topics.
 6. Add explicit links back from relevant journal entries or durable notes where useful.
 7. Keep provenance factual. Journal-only promotions may cite the journal note paths in the body while leaving `sources` empty unless a raw source also supports the claim.
 8. Run:
@@ -70,7 +70,7 @@ python3 scripts/synthesis_report.py
 2. Open the newest file under `wiki/pages/reports/`.
 3. Review:
    - new journal entries
-   - new inbox clips
+   - new `wiki/inbox/` items
    - repeated names
    - repeated phrases
    - potential cross-note connections
@@ -79,7 +79,7 @@ python3 scripts/synthesis_report.py
    - are the top candidates useful or mostly junk?
    - did it miss any obvious recurring topic or durable one-off reference?
    - is tuning `scripts/synthesis_report.py` more valuable than promoting from this run?
-5. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, `wiki/entities/`, `wiki/crm/`, or `wiki/syntheses/`.
+5. Decide what deserves promotion into `wiki/topics/`, `wiki/pages/`, or `wiki/crm/`.
 6. Keep the report as a review aid, not as a substitute for canonical notes.
 
 ## Run Autonomous Promotion
@@ -96,6 +96,6 @@ export AUTOPROMOTE_COMMAND='your-agent-command'
 scripts/run_autonomous_promotion.sh
 ```
 
-3. The runner will skip when no journal entries or inbox clips changed.
+3. The runner will skip when no journal entries or `wiki/inbox/` items changed.
 4. When a report is created, the runner prompts the configured agent to promote high-confidence durable material.
 5. Human input is reserved for sensitive CRM claims, destructive deletes or merges, major taxonomy changes, or unresolved contradictions.

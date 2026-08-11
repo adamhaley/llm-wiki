@@ -1,0 +1,28 @@
+{
+  "vault_root": "./",
+  "discovered_at": "2026-08-11T00:00:00Z",
+  "restructured_at": "2026-08-11T00:00:00Z",
+  "restructure_note": "raw/ folded into wiki/inbox/ (now inside the vault, reachable by Obsidian Sync); wiki/entities/, wiki/sources/, wiki/syntheses/ folded into wiki/pages/ (differentiated by type: frontmatter, not folder). See WIKI_SCHEMA.md Core Model historical note.",
+  "folder_index_convention": {
+    "name": "README.md",
+    "confidence": "high",
+    "evidence": "purpose-statement README.md per non-trivial folder",
+    "coverage": 0.7
+  },
+  "roles": [
+    {"name": "root_claude", "path": "./CLAUDE.md", "kind": "file", "layer": "meta", "is_standard": true, "confidence": "high", "purpose": "Claude entrypoint, thin, points at WIKI_SCHEMA.md"},
+    {"name": "root_claude_mirror", "path": "./AGENTS.md", "kind": "file", "layer": "meta", "is_standard": false, "confidence": "high", "purpose": "Codex entrypoint, intentional near-duplicate of CLAUDE.md"},
+    {"name": "schema", "path": "./WIKI_SCHEMA.md + ./Schema/", "kind": "folder", "layer": "meta", "is_standard": false, "confidence": "high", "purpose": "Operating rules for agentic maintenance; plays the claude_rules role"},
+    {"name": "skills", "path": "./.agents/skills/", "kind": "folder", "layer": "meta", "is_standard": true, "confidence": "high", "purpose": "5 SKILL.md files for ingest/lint/maintain/promote/query"},
+    {"name": "topics", "path": "./wiki/topics/", "kind": "folder", "layer": "curated", "is_standard": true, "confidence": "high", "purpose": "Canonical topic hubs / navigational index-of-indexes layer"},
+    {"name": "crm", "path": "./wiki/crm/", "kind": "folder", "layer": "curated", "is_standard": false, "confidence": "high", "purpose": "Person/contact records; kept separate from pages/entity for the human-review-on-sensitive-claims privacy boundary"},
+    {"name": "pages", "path": "./wiki/pages/", "kind": "folder", "layer": "curated", "is_standard": true, "confidence": "high", "purpose": "All durable compiled knowledge: type: page, entity, source, and synthesis notes, differentiated by frontmatter, not by folder. Includes ahmedia/plans/ sub-project and many prospect pages."},
+    {"name": "reports", "path": "./wiki/pages/reports/", "kind": "folder", "layer": "session", "is_standard": false, "confidence": "medium", "purpose": "Timestamped autonomous synthesis-report snapshots; ephemeral agent output, not yet curated"},
+    {"name": "daily", "path": "./wiki/journal/", "kind": "folder", "layer": "session", "is_standard": true, "confidence": "high", "purpose": "Dated journal entries, one file per day"},
+    {"name": "inbox", "path": "./wiki/inbox/", "kind": "folder", "layer": "session", "is_standard": false, "confidence": "high", "purpose": "Single landing zone for raw source material and Web Clipper captures, unified 2026-08-11 (was raw/ + wiki/inbox-clips/). Inside the vault so Obsidian Sync (including a headless VPS client) reaches it. 'Fast collection, not curation.'"},
+    {"name": "templates", "path": "./wiki/templates/", "kind": "folder", "layer": "meta", "is_standard": true, "confidence": "high", "purpose": "Starter templates for each note type (serves resources role)"}
+  ],
+  "missing_standard_roles": ["identity", "decisions", "meetings", "transcripts", "archive"],
+  "low_confidence_roles": ["reports"],
+  "unconfirmed_custom_roles": []
+}

@@ -5,15 +5,15 @@ description: Use this skill when ingesting new material from raw sources into th
 
 # LLM Wiki Ingest
 
-Use this skill when ingesting new material from `raw/` into `wiki/`.
+Use this skill when ingesting new material from `wiki/inbox/` into the rest of `wiki/`.
 
 ## Workflow
 
 1. Read `WIKI_SCHEMA.md`.
 2. Run `python3 scripts/wiki_tool.py source-delta`.
-3. Search `wiki/catalog.jsonl` before opening broad raw context.
+3. Search `wiki/catalog.jsonl` before opening broad `wiki/inbox/` context.
 4. Update or create:
-   - `wiki/sources/` page
+   - a `type: source` page in `wiki/pages/`
    - affected durable wiki notes
 5. Keep provenance in note frontmatter:
    - `raw_source` for source pages

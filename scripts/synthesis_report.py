@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a deterministic synthesis-prep report from new journal entries and inbox clips."""
+"""Generate a deterministic synthesis-prep report from new journal entries and wiki/inbox/ items."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from wiki_tool import (
 STATE_PATH = ROOT / "scripts" / "state.json"
 REPORTS_DIR = WIKI_DIR / "pages" / "reports"
 JOURNAL_DIR = WIKI_DIR / "journal"
-INBOX_CLIPS_DIR = WIKI_DIR / "inbox-clips"
+INBOX_DIR = WIKI_DIR / "inbox"
 SKIP_FILENAMES = {"README.md", "index.md"}
 ANALYSIS_STOPWORDS = {
     "a",
@@ -286,7 +286,9 @@ def load_changed_items(state: dict[str, Any]) -> tuple[list[ChangedItem], dict[s
                 )
             )
 
-    for path in iter_markdown(INBOX_CLIPS_DIR):
+    for path in iter_markdown(INBOX_DIR):
+        if "assets" in path.parts:
+            continue
         note = load_note(path, "clip")
         rel_path = path.relative_to(ROOT).as_posix()
         digest = sha256_text(path.read_text(encoding="utf-8"))
@@ -452,12 +454,12 @@ def render_report(
     lines = [
         f"# Synthesis Report {now.strftime('%Y-%m-%d %H:%M')}",
         "",
-        "Deterministic review brief for new or changed journal entries and inbox clips.",
+        "Deterministic review brief for new or changed journal entries and wiki/inbox/ items.",
         "",
         "## Summary",
         "",
         f"- Changed journal entries: {len(journal_items)}",
-        f"- Changed inbox clips: {len(clip_items)}",
+        f"- Changed inbox items: {len(clip_items)}",
         f"- Repeated names surfaced: {len(name_candidates)}",
         f"- Repeated phrases surfaced: {len(phrase_candidates)}",
         f"- Potential cross-note connections: {len(connections)}",
@@ -525,7 +527,7 @@ def render_report(
             "- Choose only durable concepts, people, or cross-note insights worth promoting.",
             "- Create or update canonical hub notes in `wiki/topics/`.",
             "- Create supporting durable notes in `wiki/pages/` when a note belongs under a hub rather than as a peer topic.",
-            "- File higher-order conclusions into `wiki/syntheses/` when a genuine synthesis emerges.",
+            "- File higher-order conclusions into `wiki/pages/` as `type: synthesis` when a genuine synthesis emerges.",
         ]
     )
     return "\n".join(lines) + "\n"
