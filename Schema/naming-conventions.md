@@ -12,5 +12,7 @@ Directory intent:
 - `wiki/` root: in-vault inbox for hand-dropped files awaiting triage, distinct from `wiki/inbox/`. List with `python3 scripts/wiki_tool.py root-inbox`. No naming convention required.
 - `wiki/topics/`: canonical topic hubs
 - `wiki/pages/`: everything else durable — supporting pages (`type: page`), named entities (`type: entity`), source summaries (`type: source`), and syntheses (`type: synthesis`) — differentiated by frontmatter, not by folder
-- `wiki/crm/`: named contact records
-- `wiki/journal/`: dated reflection and capture notes
+- `wiki/crm/`: named contact records, also the source layer for a live sync into adamhaley-com's Client CRM
+- `wiki/journal/`: dated reflection and capture notes, including daily session logs
+- `wiki/field-reports/`: structured field captures (location, photos, notes), timestamped filenames, one per capture session
+- `wiki/patterns/`: durable technical/architectural patterns, kebab-case pattern name per file

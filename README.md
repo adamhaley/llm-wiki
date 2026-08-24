@@ -1,6 +1,6 @@
 # LLM Wiki
 
-This repository implements a local "LLM wiki" in the style described by Andrej Karpathy.
+This repository is Adam's second brain: a markdown-based hub for personal knowledge, contact/relationship data, reusable engineering patterns, structured field capture, and daily journaling, maintained by AI agents and synced live via Obsidian Sync. Its knowledge-compilation layer (`wiki/inbox/` → `wiki/topics/`/`wiki/pages/`, with deterministic build/lint tooling) follows the "LLM wiki" pattern described by Andrej Karpathy; `wiki/crm/`, `wiki/journal/`, `wiki/field-reports/`, and `wiki/patterns/` are additional first-class directories built on top of that pattern for the vault's other roles. See [Second Brain](wiki/topics/second-brain.md) for the full picture and [LLM Wiki](wiki/topics/llm-wiki.md) for the compiler pattern specifically.
 
 - `wiki/inbox/` holds raw source material and Web Clipper captures awaiting triage — inside the Obsidian vault, so it reaches every synced device.
 - `wiki/` is the markdown wiki and the Obsidian vault.
@@ -69,8 +69,10 @@ wiki/
   topics/        canonical topic hubs
   pages/         everything else durable: type: page, entity, source, or synthesis
   templates/     starter templates that remain tracked
-  journal/       dated reflective entries
-  crm/           contact records and relationship notes
+  journal/       dated reflective entries and session logs
+  crm/           contact records and relationship context; the source layer for a live sync into adamhaley-com's Client CRM
+  field-reports/ structured field captures (location, photos, notes) from the Telegram capture bot
+  patterns/      durable technical/architectural patterns coding agents check before building
 ```
 
 ## Suggested Workflow

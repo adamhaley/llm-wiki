@@ -1,13 +1,13 @@
 # Wiki Schema
 
-This file defines how agents should maintain this repository as a personal "LLM wiki".
+This file defines how agents should maintain this repository, Adam's second brain.
 
 ## Core Model
 
 There are two layers, both inside the Obsidian vault so both reach every synced device (including a headless VPS sync client):
 
 1. `wiki/inbox/`: raw and unprocessed material awaiting triage — Web Clipper captures, dropped-in raw sources, anything not yet promoted.
-2. `wiki/{topics,pages,crm,journal}/`: the LLM-maintained, durable markdown knowledge base.
+2. `wiki/{topics,pages,crm,journal,field-reports,patterns}/`: the agent-maintained, durable markdown layer. `topics/`+`pages/` compile knowledge for future retrieval, in the "LLM wiki" pattern; `crm/`, `journal/`, `field-reports/`, and `patterns/` are additional first-class directories serving the second brain's other roles (relationship data with a live database sync, daily reflection, structured field capture, and reusable engineering patterns respectively) — see their own `README.md` for each.
 
 `WIKI_SCHEMA.md` itself is the maintenance contract for ingestion, querying, linting, and the repo-versus-vault boundary.
 
@@ -65,8 +65,10 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/topics/`: canonical topic hubs — the navigational index-of-indexes layer for concepts, themes, or subject areas. Kept as a separate folder because it plays a distinct hub/leaf role, not just a content-type distinction.
 - `wiki/pages/`: durable compiled knowledge — supporting notes, named entities, ingested sources, and syntheses all live here now, differentiated by `type:` frontmatter (`page`, `entity`, `source`, `synthesis`) rather than by folder. See `wiki/pages/README.md`.
 - `wiki/templates/`: starter templates only.
-- `wiki/journal/`: dated notes grounded in the wiki and past entries.
-- `wiki/crm/`: person records and relationship context. Kept as a separate folder (not `type: entity` inside `wiki/pages/`) because promotion here is gated behind human review for sensitive claims — a privacy boundary, not just a category.
+- `wiki/journal/`: dated notes grounded in the wiki and past entries, including daily session logs. See `wiki/journal/README.md`.
+- `wiki/crm/`: person records and relationship context. Kept as a separate folder (not `type: entity` inside `wiki/pages/`) because promotion here is gated behind human review for sensitive claims — a privacy boundary, not just a category. Also the source layer for a live one-way sync into adamhaley-com's Client CRM database (`scripts/import_crm_clients.py`) — see `wiki/pages/crm-database-pipeline.md`.
+- `wiki/field-reports/`: structured field captures (location, photos, notes) from the Telegram multimodal capture bot. Kept separate from `wiki/journal/` because these are structured/repeatable, not narrative. See `wiki/field-reports/README.md`.
+- `wiki/patterns/`: durable technical/architectural patterns coding agents check before building something new in a project, each linked to a real reference implementation. See `wiki/patterns/README.md`.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
 - Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
 
@@ -81,9 +83,11 @@ Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source materi
 
 - Put external source material and Web Clipper captures in `wiki/inbox/`.
 - Put hand-dropped material that lands elsewhere in the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
-- Put normalized personal reflections, dictated thoughts, and daily notes in `wiki/journal/`.
+- Put normalized personal reflections, dictated thoughts, daily notes, and session logs in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/pages/` or `wiki/topics/`.
 - Put person-specific records in `wiki/crm/`.
+- Put structured field captures (location, photos, notes from the field) in `wiki/field-reports/`.
+- Put durable, reusable technical/architectural patterns in `wiki/patterns/`.
 
 Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `wiki/inbox/` first unless the raw transcript itself is worth preserving as source material.
 
@@ -209,7 +213,7 @@ crm_sync_status: local-only
 
 Use the body for relationship context, history, judgment, and nuance. Use frontmatter for fields that may later sync cleanly to a database. Do not invent contact details; leave unknown fields explicit until verified.
 
-Future database sync should treat markdown CRM notes as the context layer and the external database as the operational structured layer. `crm_external_id` and `crm_sync_status` are reserved for that bridge.
+The markdown CRM notes are the context layer; adamhaley-com's `Client` database is the operational structured layer. `scripts/import_crm_clients.py` performs a one-way sync (`wiki/crm/*.md` → `POST /api/clients`), matching records on `source: second_brain_crm` + `source_external_id: {note filename}`. On conflict the database wins: the sync only fills fields the Client record doesn't already have a value for, never overwrites one — so a value edited directly in the Laravel admin for a field the vault also sets will not be clobbered by the next sync. See `wiki/pages/crm-database-pipeline.md` for the full pipeline.
 
 ## Ingest Workflow
 
