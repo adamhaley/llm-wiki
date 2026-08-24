@@ -2,9 +2,14 @@
 """Manual sync: import wiki/crm/*.md client notes into adamhaley-com's /api/clients.
 
 Reads SECOND_BRAIN_CLIENT_API_URL and SECOND_BRAIN_CLIENT_API_TOKEN from .env
-in this repo's root (gitignored). Run by hand when new CRM notes are added -
-not scheduled. See project_crm_import_automation_pin memory for the plan to
-make this a durable, cron-scheduled step later.
+in this repo's root (gitignored) - .env points at production by default, so a
+bare run hits the live site. When testing a change to this script itself
+(not just a routine sync), pass a local URL/token explicitly as arguments to
+avoid writing to prod: `import_crm_clients.py <local-token> <local-url>`.
+
+Run by hand when new CRM notes are added - not scheduled. See
+project_crm_import_automation_pin memory for the plan to make this a
+durable, cron-scheduled step later.
 """
 import json
 import re
@@ -68,9 +73,21 @@ def parse_frontmatter(text: str) -> dict:
     return data
 
 
+def strip_obsidian_links(text: str) -> str:
+    """Reduce vault-relative markdown/wikilinks to their plain link text.
+
+    Vault notes cross-link heavily (`[Upwork](../topics/upwork.md)`,
+    `[[Some Page]]`), which is meaningless once decoupled from the vault.
+    """
+    text = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", text)  # [[Page|Alias]] -> Alias
+    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)  # [[Page]] -> Page
+    text = re.sub(r"\[([^\]]+)\]\((?!https?://)[^)]+\)", r"\1", text)  # [text](relative.md) -> text
+    return text
+
+
 def extract_summary(body: str) -> str | None:
     m = re.search(r"## Summary\n\n(.*?)\n\n##", body, re.DOTALL)
-    return m.group(1).strip() if m else None
+    return strip_obsidian_links(m.group(1).strip()) if m else None
 
 
 def first_or_none(items):
