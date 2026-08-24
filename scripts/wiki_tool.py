@@ -33,21 +33,29 @@ CATALOG_DIRS = {
     "pages": "page",
     "crm": "crm",
     "journal": "journal",
+    "field-reports": "field-report",
+    "patterns": "pattern",
 }
 SECTION_LABELS = {
     "topics": "Topics",
     "pages": "Pages",
     "crm": "CRM",
     "journal": "Journal",
+    "field-reports": "Field Reports",
+    "patterns": "Patterns",
 }
 EMPTY_MESSAGES = {
     "topics": "No topic pages yet.",
     "pages": "No page notes yet.",
     "crm": "No CRM pages yet.",
     "journal": "No journal pages yet.",
+    "field-reports": "No field reports yet.",
+    "patterns": "No patterns yet.",
 }
-STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm"}
-ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis"}
+# field-report/pattern notes don't carry the full common-frontmatter contract
+# (no status/created/updated requirement) - only require what they already use.
+STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
+ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference"}
 SKIP_FILENAMES = {"README.md", "index.md"}
 WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "catalog.jsonl"}
 STOPWORDS = {
@@ -558,6 +566,19 @@ def wiki_markdown_index() -> dict[str, Path]:
     return index
 
 
+def wiki_attachment_index() -> dict[str, Path]:
+    """basename (lowercased, with extension) -> path, for non-markdown files in wiki/.
+
+    Used to resolve [[image.jpg]]-style embed wikilinks, which (unlike note
+    wikilinks) keep their extension and aren't covered by wiki_markdown_index().
+    """
+    index: dict[str, Path] = {}
+    for path in WIKI_DIR.rglob("*"):
+        if path.is_file() and path.suffix.lower() != ".md":
+            index.setdefault(path.name.lower(), path)
+    return index
+
+
 def dead_link_candidates() -> list[dict[str, str]]:
     """Find [text](target) and [[wikilink]] targets that don't resolve to a real file.
 
@@ -566,6 +587,7 @@ def dead_link_candidates() -> list[dict[str, str]]:
     """
     notes = load_catalog_notes()
     name_index = wiki_markdown_index()
+    attachment_index = wiki_attachment_index()
     results: list[dict[str, str]] = []
 
     for note in notes:
@@ -604,16 +626,26 @@ def dead_link_candidates() -> list[dict[str, str]]:
 
             for wikitarget in WIKILINK_TARGET_PATTERN.findall(cleaned):
                 key = wikitarget.strip().lower()
-                if not key or key in name_index:
+                if not key:
                     continue
-                suggestions = difflib.get_close_matches(key, name_index.keys(), n=3)
+                is_attachment = Path(key).suffix not in ("", ".md")
+                if is_attachment:
+                    if key in attachment_index:
+                        continue
+                    suggestions = difflib.get_close_matches(key, attachment_index.keys(), n=3)
+                    suggestion_paths = [attachment_index[s] for s in suggestions]
+                else:
+                    if key in name_index:
+                        continue
+                    suggestions = difflib.get_close_matches(key, name_index.keys(), n=3)
+                    suggestion_paths = [name_index[s] for s in suggestions]
                 results.append(
                     {
                         "source": note.rel_path,
                         "link_type": "wikilink",
                         "target": wikitarget.strip(),
                         "excerpt": stripped[:160],
-                        "suggestions": ", ".join(wiki_relative(name_index[s]) for s in suggestions),
+                        "suggestions": ", ".join(wiki_relative(p) for p in suggestion_paths),
                     }
                 )
     return results
@@ -685,6 +717,8 @@ def build_root_index(notes: list[Note]) -> None:
         ("pages", SECTION_LABELS["pages"]),
         ("crm", SECTION_LABELS["crm"]),
         ("journal", SECTION_LABELS["journal"]),
+        ("field-reports", SECTION_LABELS["field-reports"]),
+        ("patterns", SECTION_LABELS["patterns"]),
     ]
 
     lines.append("### Inbox")
