@@ -85,6 +85,7 @@ Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source materi
 - Put hand-dropped material that lands elsewhere in the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
 - Put normalized personal reflections, dictated thoughts, daily notes, and session logs in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/pages/` or `wiki/topics/`.
+- Put project/build plans worth keeping as `type: plan` pages in `wiki/pages/`.
 - Put person-specific records in `wiki/crm/`.
 - Put structured field captures (location, photos, notes from the field) in `wiki/field-reports/`.
 - Put durable, reusable technical/architectural patterns in `wiki/patterns/`.
