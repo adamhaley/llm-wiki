@@ -62,6 +62,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/index.md`: vault catalog and starting point for navigation.
 - `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
+- `wiki/todo.md`: rolling flat checklist of loose next-session to-dos — not a `type: plan` page (too heavyweight/per-project for a quick next-action) and not a dated `wiki/journal/` entry (not narrative). Check items off or remove them once done.
 - `wiki/topics/`: canonical topic hubs — the navigational index-of-indexes layer for concepts, themes, or subject areas. Kept as a separate folder because it plays a distinct hub/leaf role, not just a content-type distinction.
 - `wiki/pages/`: durable compiled knowledge — supporting notes, named entities, ingested sources, and syntheses all live here now, differentiated by `type:` frontmatter (`page`, `entity`, `source`, `synthesis`) rather than by folder. See `wiki/pages/README.md`.
 - `wiki/templates/`: starter templates only.
@@ -86,6 +87,7 @@ Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source materi
 - Put normalized personal reflections, dictated thoughts, daily notes, and session logs in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/pages/` or `wiki/topics/`.
 - Put project/build plans worth keeping as `type: plan` pages in `wiki/pages/`.
+- Put quick next-session to-dos in `wiki/todo.md`.
 - Put person-specific records in `wiki/crm/`.
 - Put structured field captures (location, photos, notes from the field) in `wiki/field-reports/`.
 - Put durable, reusable technical/architectural patterns in `wiki/patterns/`.

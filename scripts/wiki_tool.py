@@ -57,7 +57,7 @@ EMPTY_MESSAGES = {
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
 ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference"}
 SKIP_FILENAMES = {"README.md", "index.md"}
-WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "catalog.jsonl"}
+WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "todo.md", "catalog.jsonl"}
 STOPWORDS = {
     "a", "about", "after", "all", "also", "am", "an", "and", "any", "are", "as", "at",
     "be", "because", "been", "before", "being", "but", "by", "can", "could", "day", "did",
