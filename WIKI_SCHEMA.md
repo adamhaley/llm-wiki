@@ -146,6 +146,16 @@ Recommended body sections:
 
 Not every page needs every section. Keep pages compact and composable.
 
+`status` is freeform for most `type:` values, but `type: plan` pages use a closed set so
+tooling (e.g. the `SessionStart` hook surfacing unexecuted plans) can rely on it:
+
+- `planned`: not yet started.
+- `in-progress`: actively being worked.
+- `done`: closed, however it actually resolved — including a plan that got superseded or
+  pivoted along the way. Add a brief `Outcome` note in the body explaining what actually
+  happened when it diverges from the original design, rather than inventing an `abandoned`
+  status.
+
 ## Source Page Requirements
 
 Every ingested source should generally get a `type: source` page in `wiki/pages/` that records:
