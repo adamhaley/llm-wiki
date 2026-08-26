@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Manual sync: import wiki/crm/*.md client notes into adamhaley-com's /api/clients.
+"""Manual sync: import wiki/field-reports/*.md tagged `prospect` into adamhaley-com's /api/prospects.
 
-Reads SECOND_BRAIN_CLIENT_API_URL and SECOND_BRAIN_API_TOKEN from .env in this
-repo's root (gitignored) - .env points at production by default, so a bare run
-hits the live site. When testing a change to this script itself (not just a
-routine sync), pass a local URL/token explicitly as arguments to avoid writing
-to prod: `import_crm_clients.py <local-token> <local-url>`.
+Only field reports with `prospect` in their frontmatter `tags` list are synced - most field
+reports are general captures, not leads. Tag a report `prospect` in Obsidian to make it
+importable.
 
-SECOND_BRAIN_API_TOKEN is shared with import_prospects.py - one Sanctum token
-with both clients:manage and prospects:manage abilities, rather than a
-separate token per endpoint.
+Reads SECOND_BRAIN_PROSPECT_API_URL and SECOND_BRAIN_API_TOKEN from .env in this repo's
+root (gitignored) - .env points at production by default, so a bare run hits the live site.
+When testing a change to this script itself (not just a routine sync), pass a local
+URL/token explicitly as arguments to avoid writing to prod:
+`import_prospects.py <local-token> <local-url>`.
 
-Run by hand when new CRM notes are added - not scheduled. See
-project_crm_import_automation_pin memory for the plan to make this a
-durable, cron-scheduled step later.
+SECOND_BRAIN_API_TOKEN is shared with import_crm_clients.py - one Sanctum token with both
+clients:manage and prospects:manage abilities, rather than a separate token per endpoint.
+
+Run by hand when field reports get tagged `prospect` - not scheduled.
 """
 import json
 import re
@@ -22,8 +23,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CRM_DIR = REPO_ROOT / "wiki" / "crm"
-SKIP = {"index.md", "README.md", "cassio.md"}  # cassio is a personal contact, not a business client
+FIELD_REPORTS_DIR = REPO_ROOT / "wiki" / "field-reports"
+SKIP = {"index.md", "README.md"}
 
 
 def load_env(path: Path) -> dict:
@@ -41,7 +42,7 @@ def load_env(path: Path) -> dict:
 
 env = load_env(REPO_ROOT / ".env")
 TOKEN = sys.argv[1] if len(sys.argv) > 1 else env.get("SECOND_BRAIN_API_TOKEN")
-API_URL = sys.argv[2] if len(sys.argv) > 2 else env.get("SECOND_BRAIN_CLIENT_API_URL", "https://adamhaley-com.test/api/clients")
+API_URL = sys.argv[2] if len(sys.argv) > 2 else env.get("SECOND_BRAIN_PROSPECT_API_URL", "https://adamhaley-com.test/api/prospects")
 
 if not TOKEN:
     print("No token found. Set SECOND_BRAIN_API_TOKEN in .env, or pass one as an argument.", file=sys.stderr)
@@ -69,6 +70,15 @@ def parse_frontmatter(text: str) -> dict:
                     i += 1
                 data[key] = items
                 continue
+            elif val == "" and i + 1 < len(lines) and re.match(r"^  \w+:", lines[i + 1]):
+                nested = {}
+                i += 1
+                while i < len(lines) and re.match(r"^  \w+:", lines[i]):
+                    nm = re.match(r"^  (\w+):\s*(.*)$", lines[i])
+                    nested[nm.group(1)] = nm.group(2).strip()
+                    i += 1
+                data[key] = nested
+                continue
             elif val == "[]":
                 data[key] = []
             else:
@@ -77,44 +87,34 @@ def parse_frontmatter(text: str) -> dict:
     return data
 
 
-def strip_obsidian_links(text: str) -> str:
-    """Reduce vault-relative markdown/wikilinks to their plain link text.
-
-    Vault notes cross-link heavily (`[Upwork](../topics/upwork.md)`,
-    `[[Some Page]]`), which is meaningless once decoupled from the vault.
-    """
-    text = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", text)  # [[Page|Alias]] -> Alias
-    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)  # [[Page]] -> Page
-    text = re.sub(r"\[([^\]]+)\]\((?!https?://)[^)]+\)", r"\1", text)  # [text](relative.md) -> text
-    return text
+def strip_image_embeds(text: str) -> str:
+    return re.sub(r"!\[\[[^\]]+\]\]\n?", "", text).strip()
 
 
-def extract_summary(body: str) -> str | None:
-    m = re.search(r"## Summary\n\n(.*?)\n\n##", body, re.DOTALL)
-    return strip_obsidian_links(m.group(1).strip()) if m else None
-
-
-def first_or_none(items):
-    return items[0] if items else None
+def as_float(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 results = []
-for path in sorted(CRM_DIR.glob("*.md")):
+for path in sorted(FIELD_REPORTS_DIR.glob("*.md")):
     if path.name in SKIP:
         continue
     fm = parse_frontmatter(path.read_text())
-    slug = path.stem
+    if "prospect" not in fm.get("tags", []):
+        continue
 
-    location = fm.get("location", "unknown")
+    slug = path.stem
+    location = fm.get("location", {}) if isinstance(fm.get("location"), dict) else {}
+
     payload = {
-        "source": "second_brain_crm",
+        "source": "second_brain_field_report",
         "source_external_id": slug,
-        "name": fm.get("title") or slug,
-        "description": extract_summary(fm.get("_body", "")),
-        "email": first_or_none(fm.get("emails", [])),
-        "phone": first_or_none(fm.get("phones", [])),
-        "address": None if location in ("unknown", "") else location,
-        "url": first_or_none(fm.get("websites", [])),
+        "latitude": as_float(location.get("latitude")),
+        "longitude": as_float(location.get("longitude")),
+        "summary": strip_image_embeds(fm.get("_body", "")) or None,
     }
     payload = {k: v for k, v in payload.items() if v is not None}
 
@@ -138,5 +138,7 @@ for path in sorted(CRM_DIR.glob("*.md")):
         info = body_text
     results.append((slug, status, info))
 
+if not results:
+    print("No field reports tagged `prospect` found.")
 for slug, status, info in results:
     print(f"{status}  {slug}  {info}")
