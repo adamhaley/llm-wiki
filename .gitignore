@@ -9,6 +9,7 @@ wiki/*
 !wiki/inbox/
 !wiki/journal/
 !wiki/pages/
+!wiki/projects/
 !wiki/templates/
 !wiki/topics/
 wiki/crm/*
@@ -22,6 +23,8 @@ wiki/pages/*
 !wiki/pages/reports/
 wiki/pages/reports/*
 !wiki/pages/reports/README.md
+wiki/projects/*
+!wiki/projects/README.md
 wiki/templates/*
 !wiki/templates/*.md
 wiki/topics/*

@@ -70,6 +70,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/crm/`: person records and relationship context. Kept as a separate folder (not `type: entity` inside `wiki/pages/`) because promotion here is gated behind human review for sensitive claims — a privacy boundary, not just a category. Also the source layer for a live one-way sync into adamhaley-com's Client CRM database (`scripts/import_crm_clients.py`) — see `wiki/pages/crm-database-pipeline.md`.
 - `wiki/field-reports/`: structured field captures (location, photos, notes) from the Telegram multimodal capture bot. Kept separate from `wiki/journal/` because these are structured/repeatable, not narrative. See `wiki/field-reports/README.md`.
 - `wiki/patterns/`: durable technical/architectural patterns coding agents check before building something new in a project, each linked to a real reference implementation. See `wiki/patterns/README.md`.
+- `wiki/projects/`: per-project grouping of plans, session logs, and takeaways for a specific ongoing project, once that project has earned enough of that content to be worth grouping. See `wiki/projects/README.md`.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
 - Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
 
@@ -84,9 +85,11 @@ Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source materi
 
 - Put external source material and Web Clipper captures in `wiki/inbox/`.
 - Put hand-dropped material that lands elsewhere in the vault (pasted notes, drafts, reference clippings) at the `wiki/` root, awaiting triage.
-- Put normalized personal reflections, dictated thoughts, daily notes, and session logs in `wiki/journal/`.
+- Put normalized personal reflections, dictated thoughts, daily notes, and general (non-project-specific) session logs in `wiki/journal/`.
 - Put durable synthesized knowledge in `wiki/pages/` or `wiki/topics/`.
-- Put project/build plans worth keeping as `type: plan` pages in `wiki/pages/`.
+- Put project/build plans worth keeping as `type: plan` pages: in `wiki/projects/{project}/plans/` when the plan belongs to a project tracked there, otherwise in `wiki/pages/` for a one-off plan with no ongoing project home.
+- Put session-log content that is really about one specific tracked project in `wiki/projects/{project}/session-logs/` instead of `wiki/journal/` — see `wiki/projects/README.md` for the threshold.
+- Put lessons-learned/retro-style notes for a tracked project in `wiki/projects/{project}/takeaways/`.
 - Put quick next-session to-dos in `wiki/todo.md`.
 - Put person-specific records in `wiki/crm/`.
 - Put structured field captures (location, photos, notes from the field) in `wiki/field-reports/`.
@@ -146,8 +149,9 @@ Recommended body sections:
 
 Not every page needs every section. Keep pages compact and composable.
 
-`status` is freeform for most `type:` values, but `type: plan` pages use a closed set so
-tooling (e.g. the `SessionStart` hook surfacing unexecuted plans) can rely on it:
+`status` is freeform for most `type:` values, but `type: plan` pages — whether in
+`wiki/pages/` or `wiki/projects/{project}/plans/` — use a closed set so tooling (e.g. the
+`SessionStart` hook surfacing unexecuted plans) can rely on it:
 
 - `planned`: not yet started.
 - `in-progress`: actively being worked.
