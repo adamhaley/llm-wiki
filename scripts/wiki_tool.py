@@ -55,7 +55,7 @@ EMPTY_MESSAGES = {
 # field-report/pattern notes don't carry the full common-frontmatter contract
 # (no status/created/updated requirement) - only require what they already use.
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
-ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference"}
+ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway"}
 SKIP_FILENAMES = {"README.md", "index.md"}
 WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "todo.md", "catalog.jsonl"}
 STOPWORDS = {
