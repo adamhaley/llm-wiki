@@ -22,8 +22,11 @@ SCHEMA_DIR = ROOT / "Schema"
 CATALOG_PATH = WIKI_DIR / "catalog.jsonl"
 MANIFEST_PATH = SCHEMA_DIR / "source-manifest.jsonl"
 LOG_PATH = WIKI_DIR / "log.md"
+TODO_PATH = WIKI_DIR / "todo.md"
 
 TODAY = date.today().isoformat()
+
+PLAN_STATUSES = ("planned", "in-progress", "done")
 
 # Folder -> default note type. entity/source/synthesis notes now live inside
 # pages/ (see ALLOWED_TYPES) and carry an explicit `type:` frontmatter value
@@ -1000,6 +1003,102 @@ def command_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def write_text_atomic(path: Path, text: str) -> None:
+    temp_path = path.with_name(path.name + ".tmp")
+    temp_path.write_text(text, encoding="utf-8")
+    temp_path.replace(path)
+
+
+def set_frontmatter_value(text: str, key: str, value: str) -> str:
+    """Replace a top-level frontmatter scalar line in place, leaving everything else byte-identical."""
+    lines = text.split("\n")
+    if not lines or lines[0] != "---":
+        raise WikiError("file has no frontmatter")
+    for index in range(1, len(lines)):
+        if lines[index] == "---":
+            raise WikiError(f"frontmatter has no `{key}:` line")
+        if lines[index].startswith(f"{key}:"):
+            lines[index] = f"{key}: {value}"
+            return "\n".join(lines)
+    raise WikiError("frontmatter is not closed")
+
+
+def todo_project_prefix(item_text: str) -> str | None:
+    head, separator, _ = item_text.partition(": ")
+    return head if separator and " " not in head else None
+
+
+def add_todo_item(text: str, item_text: str) -> str:
+    lines = text.split("\n")
+    item_pattern = re.compile(r"^- \[[ x]\] ")
+    if any(item_pattern.sub("", line, count=1) == item_text for line in lines if item_pattern.match(line)):
+        raise WikiError("an identical todo item already exists")
+    prefix = todo_project_prefix(item_text)
+    insert_after = None
+    if prefix:
+        for index, line in enumerate(lines):
+            if item_pattern.match(line) and item_pattern.sub("", line, count=1).startswith(f"{prefix}: "):
+                insert_after = index
+    if insert_after is None:
+        for index, line in enumerate(lines):
+            if item_pattern.match(line):
+                insert_after = index
+    if insert_after is None:
+        raise WikiError("todo.md has no checklist items to anchor to")
+    lines.insert(insert_after + 1, f"- [ ] {item_text}")
+    return "\n".join(lines)
+
+
+def check_todo_item(text: str, match: str, note: str | None) -> str:
+    lines = text.split("\n")
+    hits = [index for index, line in enumerate(lines) if line.startswith("- [ ] ") and match in line]
+    if not hits:
+        raise WikiError(f"no unchecked todo item contains: {match}")
+    if len(hits) > 1:
+        preview = "; ".join(lines[index][6:80] for index in hits)
+        raise WikiError(f"{len(hits)} unchecked items match, be more specific: {preview}")
+    line = lines[hits[0]]
+    lines[hits[0]] = "- [x] " + line[6:] + (f" — {note}" if note else "")
+    return "\n".join(lines)
+
+
+def set_plan_status(text: str, status: str, note: str | None) -> str:
+    if status not in PLAN_STATUSES:
+        raise WikiError(f"status must be one of: {', '.join(PLAN_STATUSES)}")
+    text = set_frontmatter_value(text, "status", status)
+    text = set_frontmatter_value(text, "updated", TODAY)
+    if note is None:
+        return text
+    lines = text.split("\n")
+    for index, line in enumerate(lines):
+        if line.startswith("**Status:**"):
+            lines[index] = f"**Status:** {note}"
+            return "\n".join(lines)
+    raise WikiError("plan has no `**Status:**` line to apply --note to")
+
+
+def command_todo(args: argparse.Namespace) -> int:
+    if not TODO_PATH.exists():
+        raise WikiError("wiki/todo.md does not exist")
+    text = TODO_PATH.read_text(encoding="utf-8")
+    if args.action == "add":
+        text = add_todo_item(text, args.text)
+    else:
+        text = check_todo_item(text, args.match, args.note)
+    write_text_atomic(TODO_PATH, set_frontmatter_value(text, "updated", TODAY))
+    print(f"todo_{args.action}=ok")
+    return 0
+
+
+def command_plan(args: argparse.Namespace) -> int:
+    path = WIKI_DIR / "projects" / args.project / "plans" / f"{args.date}.md"
+    if not path.exists():
+        raise WikiError(f"no such plan: {repo_relative(path)}")
+    write_text_atomic(path, set_plan_status(path.read_text(encoding="utf-8"), args.status, args.note))
+    print(f"plan_status={args.status} file={repo_relative(path)}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="LLM wiki maintenance tool")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1019,6 +1118,8 @@ def build_parser() -> argparse.ArgumentParser:
         "dead-links": command_dead_links,
         "root-inbox": command_root_inbox,
         "log": command_log,
+        "todo": command_todo,
+        "plan": command_plan,
     }
 
     subparsers.add_parser("doctor")
@@ -1049,6 +1150,20 @@ def build_parser() -> argparse.ArgumentParser:
     log_parser = subparsers.add_parser("log")
     log_parser.add_argument("--title", required=True)
     log_parser.add_argument("--details", required=True)
+    todo_parser = subparsers.add_parser("todo")
+    todo_subparsers = todo_parser.add_subparsers(dest="action", required=True)
+    todo_add_parser = todo_subparsers.add_parser("add")
+    todo_add_parser.add_argument("--text", required=True, help='item text, e.g. "project-slug: do the thing"')
+    todo_check_parser = todo_subparsers.add_parser("check")
+    todo_check_parser.add_argument("--match", required=True, help="substring identifying exactly one unchecked item")
+    todo_check_parser.add_argument("--note", help="appended after the item as ` — note`")
+    plan_parser = subparsers.add_parser("plan")
+    plan_subparsers = plan_parser.add_subparsers(dest="action", required=True)
+    plan_status_parser = plan_subparsers.add_parser("set-status")
+    plan_status_parser.add_argument("--project", required=True)
+    plan_status_parser.add_argument("--date", required=True, help="plan file date, YYYY-MM-DD")
+    plan_status_parser.add_argument("--status", required=True, choices=PLAN_STATUSES)
+    plan_status_parser.add_argument("--note", help="replaces the body's **Status:** line text")
 
     parser.set_defaults(func=lambda args: commands[args.command](args))
     return parser
