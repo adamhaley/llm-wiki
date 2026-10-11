@@ -10,7 +10,7 @@ import re
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +23,7 @@ CATALOG_PATH = WIKI_DIR / "catalog.jsonl"
 MANIFEST_PATH = SCHEMA_DIR / "source-manifest.jsonl"
 LOG_PATH = WIKI_DIR / "log.md"
 TODO_PATH = WIKI_DIR / "todo.md"
+TODO_ARCHIVE_PATH = WIKI_DIR / "todo-archive.md"
 
 TODAY = date.today().isoformat()
 
@@ -60,7 +61,7 @@ EMPTY_MESSAGES = {
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
 ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway"}
 SKIP_FILENAMES = {"README.md", "index.md"}
-WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "todo.md", "catalog.jsonl"}
+WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "todo.md", "todo-archive.md", "catalog.jsonl"}
 STOPWORDS = {
     "a", "about", "after", "all", "also", "am", "an", "and", "any", "are", "as", "at",
     "be", "because", "been", "before", "being", "but", "by", "can", "could", "day", "did",
@@ -1058,8 +1059,47 @@ def check_todo_item(text: str, match: str, note: str | None) -> str:
         preview = "; ".join(lines[index][6:80] for index in hits)
         raise WikiError(f"{len(hits)} unchecked items match, be more specific: {preview}")
     line = lines[hits[0]]
-    lines[hits[0]] = "- [x] " + line[6:] + (f" — {note}" if note else "")
+    lines[hits[0]] = "- [x] " + line[6:] + (f" — {note}" if note else "") + f" — completed: {TODAY}"
     return "\n".join(lines)
+
+
+def archive_todo_items(text: str, as_of: date, include_undated: bool = False) -> tuple[str, list[str], int]:
+    cutoff = as_of - timedelta(days=7)
+    remaining: list[str] = []
+    archived: list[str] = []
+    newly_dated = 0
+
+    for line in text.split("\n"):
+        if not line.startswith("- [x] "):
+            remaining.append(line)
+            continue
+
+        match = re.search(r" — completed(?: by)?: (\d{4}-\d{2}-\d{2})$", line)
+        if match:
+            try:
+                completed_on = date.fromisoformat(match.group(1))
+            except ValueError as error:
+                raise WikiError(f"invalid todo completion date: {match.group(1)}") from error
+            should_archive = completed_on <= cutoff
+        else:
+            should_archive = include_undated
+            if not should_archive:
+                line += f" — completed by: {as_of.isoformat()}"
+                newly_dated += 1
+
+        if should_archive:
+            archived.append(line)
+        else:
+            remaining.append(line)
+
+    return "\n".join(remaining), archived, newly_dated
+
+
+def append_todo_archive(text: str, items: list[str], archived_on: str) -> str:
+    if not text:
+        text = "---\ntitle: Todo Archive\ntype: todo\nupdated: " + archived_on + "\n---\n\n# Todo Archive\n"
+    text = set_frontmatter_value(text, "updated", archived_on)
+    return text.rstrip("\n") + f"\n\n## Archived {archived_on}\n\n" + "\n".join(items) + "\n"
 
 
 def set_plan_status(text: str, status: str, note: str | None) -> str:
@@ -1081,6 +1121,17 @@ def command_todo(args: argparse.Namespace) -> int:
     if not TODO_PATH.exists():
         raise WikiError("wiki/todo.md does not exist")
     text = TODO_PATH.read_text(encoding="utf-8")
+    if args.action == "archive":
+        remaining, archived, newly_dated = archive_todo_items(text, date.fromisoformat(TODAY), args.include_undated)
+        if not archived and not newly_dated:
+            print("todo_archived=0 todo_dated=0")
+            return 0
+        if archived:
+            archive_text = TODO_ARCHIVE_PATH.read_text(encoding="utf-8") if TODO_ARCHIVE_PATH.exists() else ""
+            write_text_atomic(TODO_ARCHIVE_PATH, append_todo_archive(archive_text, archived, TODAY))
+        write_text_atomic(TODO_PATH, set_frontmatter_value(remaining, "updated", TODAY))
+        print(f"todo_archived={len(archived)} todo_dated={newly_dated}")
+        return 0
     if args.action == "add":
         text = add_todo_item(text, args.text)
     else:
@@ -1157,6 +1208,10 @@ def build_parser() -> argparse.ArgumentParser:
     todo_check_parser = todo_subparsers.add_parser("check")
     todo_check_parser.add_argument("--match", required=True, help="substring identifying exactly one unchecked item")
     todo_check_parser.add_argument("--note", help="appended after the item as ` — note`")
+    todo_archive_parser = todo_subparsers.add_parser("archive")
+    todo_archive_parser.add_argument(
+        "--include-undated", action="store_true", help="also archive legacy checked items with no completion date"
+    )
     plan_parser = subparsers.add_parser("plan")
     plan_subparsers = plan_parser.add_subparsers(dest="action", required=True)
     plan_status_parser = plan_subparsers.add_parser("set-status")

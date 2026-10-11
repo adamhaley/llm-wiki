@@ -6,6 +6,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -52,10 +53,11 @@ class WikiToolEditTest(unittest.TestCase):
         self.wiki = root / "wiki"
         (self.wiki / "projects" / "demo" / "plans").mkdir(parents=True)
         self.todo = self.wiki / "todo.md"
+        self.todo_archive = self.wiki / "todo-archive.md"
         self.todo.write_text(TODO, encoding="utf-8")
         self.plan = self.wiki / "projects" / "demo" / "plans" / "2020-01-01.md"
         self.plan.write_text(PLAN, encoding="utf-8")
-        for name, value in {"ROOT": root, "WIKI_DIR": self.wiki, "TODO_PATH": self.todo}.items():
+        for name, value in {"ROOT": root, "WIKI_DIR": self.wiki, "TODO_PATH": self.todo, "TODO_ARCHIVE_PATH": self.todo_archive}.items():
             patcher = mock.patch.object(wiki_tool, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -83,7 +85,42 @@ class WikiToolEditTest(unittest.TestCase):
 
     def test_todo_check_ticks_exactly_one_item_and_appends_the_note(self) -> None:
         self.run_cli("todo", "check", "--match", "first thing", "--note", "shipped")
-        self.assertIn("- [x] alpha: first thing — shipped", self.todo.read_text())
+        self.assertIn(f"- [x] alpha: first thing — shipped — completed: {wiki_tool.TODAY}", self.todo.read_text())
+
+    def test_todo_archive_moves_only_completed_items_at_least_seven_days_old(self) -> None:
+        as_of = date(2026, 10, 11)
+        text = TODO + "- [x] old — completed: 2026-10-04\n- [x] recent — completed: 2026-10-05\n"
+
+        remaining, archived, newly_dated = wiki_tool.archive_todo_items(text, as_of)
+
+        self.assertEqual(archived, ["- [x] old — completed: 2026-10-04"])
+        self.assertIn("- [x] recent — completed: 2026-10-05", remaining)
+        self.assertIn("- [x] beta: already done — completed by: 2026-10-11", remaining)
+        self.assertIn("- [ ] alpha: first thing", remaining)
+        self.assertEqual(newly_dated, 1)
+
+    def test_todo_archive_moves_undated_completed_items_only_when_requested(self) -> None:
+        remaining, archived, newly_dated = wiki_tool.archive_todo_items(TODO, date(2026, 10, 11), include_undated=True)
+
+        self.assertEqual(archived, ["- [x] beta: already done"])
+        self.assertIn("- [ ] alpha: first thing", remaining)
+        self.assertEqual(newly_dated, 0)
+
+    def test_todo_archive_keeps_manually_checked_item_for_seven_days_after_first_seen(self) -> None:
+        first_sweep, archived, _ = wiki_tool.archive_todo_items(TODO, date(2026, 10, 11))
+        next_sweep, archived_next, _ = wiki_tool.archive_todo_items(first_sweep, date(2026, 10, 18))
+
+        self.assertEqual(archived, [])
+        self.assertEqual(archived_next, ["- [x] beta: already done — completed by: 2026-10-11"])
+        self.assertIn("- [ ] alpha: first thing", next_sweep)
+
+    def test_todo_archive_command_preserves_open_items_and_original_completed_text(self) -> None:
+        self.run_cli("todo", "archive", "--include-undated")
+
+        self.assertNotIn("- [x] beta: already done", self.todo.read_text())
+        self.assertIn("- [ ] alpha: first thing", self.todo.read_text())
+        self.assertIn("## Archived " + wiki_tool.TODAY, self.todo_archive.read_text())
+        self.assertIn("- [x] beta: already done", self.todo_archive.read_text())
 
     def test_todo_check_refuses_an_ambiguous_match(self) -> None:
         with self.assertRaises(wiki_tool.WikiError):

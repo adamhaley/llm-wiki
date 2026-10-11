@@ -62,7 +62,8 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/index.md`: vault catalog and starting point for navigation.
 - `wiki/log.md`: append-only chronological operations log.
 - `wiki/overview.md`: high-level map, thesis, and open questions.
-- `wiki/todo.md`: rolling flat checklist of loose next-session to-dos — not a `type: plan` page (too heavyweight/per-project for a quick next-action) and not a dated `wiki/journal/` entry (not narrative). Check items off or remove them once done.
+- `wiki/todo.md`: rolling flat checklist of loose next-session to-dos — not a `type: plan` page (too heavyweight/per-project for a quick next-action) and not a dated `wiki/journal/` entry (not narrative). The CLI records the completion date when it checks an item. A weekly sweep dates items checked directly in Obsidian as "completed by" the day first seen, then moves checked items to `wiki/todo-archive.md` once at least seven days have passed since their recorded date.
+- `wiki/todo-archive.md`: one append-only archive of checked to-dos, grouped by sweep date. The first cleanup may include older checked items without recorded completion dates; do not invent dates for them. Run `python3 scripts/wiki_tool.py todo archive` for regular sweeps.
 - `wiki/topics/`: canonical topic hubs — the navigational index-of-indexes layer for concepts, themes, or subject areas. Kept as a separate folder because it plays a distinct hub/leaf role, not just a content-type distinction.
 - `wiki/pages/`: durable compiled knowledge — supporting notes, named entities, ingested sources, and syntheses all live here now, differentiated by `type:` frontmatter (`page`, `entity`, `source`, `synthesis`) rather than by folder. See `wiki/pages/README.md`.
 - `wiki/templates/`: starter templates only.
