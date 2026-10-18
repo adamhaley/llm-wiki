@@ -42,6 +42,8 @@ trap cleanup EXIT
 
 cd "$REPO_DIR"
 
+log "todo archive: $(python3 scripts/wiki_tool.py todo archive 2>&1)"
+
 if [[ -z "${GROOMING_AGENT_COMMAND:-}" ]]; then
   log "skip: GROOMING_AGENT_COMMAND is not set"
   exit 0
