@@ -29,6 +29,7 @@ wiki/projects/{project-slug}/
     YYYY-MM-DD.md
   takeaways/
     YYYY-MM-DD.md
+  reference.md
 ```
 
 - `{project-slug}`: kebab-case, matching the `project:` frontmatter value already used
@@ -53,6 +54,12 @@ wiki/projects/{project-slug}/
   inform future decisions on this project rather than just record what happened. Distinct
   from `wiki/patterns/`, which only holds a technique after it has proven reusable *across*
   projects; a takeaway can and often should stay project-local forever.
+- `reference.md`: the one non-dated file in the project folder — a living reference that gets
+  *edited in place* as the code changes, unlike the three journal-style subdirectories above.
+  For things like "which file/line controls X" maps that get read back often and would go
+  stale fast as a dated entry. Single flat file, not a `reference/` directory, until a second
+  such doc for the same project actually shows up (per Earn Your Keep) — at that point,
+  promote it to a directory matching the other three's shape.
 
 ## Frontmatter
 
