@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -30,8 +31,25 @@ FORBIDDEN_PATTERNS = [
 
 
 def iter_files() -> list[Path]:
+    """Git-tracked files only - "public" here means whatever git would publish.
+
+    Deliberately not a filesystem walk. Most of wiki/ is gitignored by design
+    (see .gitignore), so walking the disk audited notes that can never leave
+    this machine, and flagged on-disk Obsidian plugin files that .gitignore
+    already excludes - noise that made this check fail permanently. Secrets in
+    untracked local notes are a real concern, but a different one.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "-z"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
     files = []
-    for path in ROOT.rglob("*"):
+    for entry in result.stdout.split("\0"):
+        if not entry:
+            continue
+        path = ROOT / entry
         if not path.is_file():
             continue
         if any(part in SKIP_DIRS for part in path.parts):
