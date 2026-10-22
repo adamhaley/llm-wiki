@@ -7,7 +7,7 @@ This file defines how agents should maintain this repository, Adam's second brai
 There are two layers, both inside the Obsidian vault so both reach every synced device (including a headless VPS sync client):
 
 1. `wiki/inbox/`: raw and unprocessed material awaiting triage — Web Clipper captures, dropped-in raw sources, anything not yet promoted.
-2. `wiki/{topics,pages,crm,journal,field-reports,patterns}/`: the agent-maintained, durable markdown layer. `topics/`+`pages/` compile knowledge for future retrieval, in the "LLM wiki" pattern; `crm/`, `journal/`, `field-reports/`, and `patterns/` are additional first-class directories serving the second brain's other roles (relationship data with a live database sync, daily reflection, structured field capture, and reusable engineering patterns respectively) — see their own `README.md` for each.
+2. `wiki/{topics,pages,crm,journal,field-reports,patterns,content}/`: the agent-maintained, durable markdown layer. `topics/`+`pages/` compile knowledge for future retrieval, in the "LLM wiki" pattern; `crm/`, `journal/`, `field-reports/`, `patterns/`, and `content/` are additional first-class directories serving the second brain's other roles (relationship data with a live database sync, daily reflection, structured field capture, reusable engineering patterns, and Adam's own content production pipeline respectively) — see their own `README.md` for each.
 
 `WIKI_SCHEMA.md` itself is the maintenance contract for ingestion, querying, linting, and the repo-versus-vault boundary.
 
@@ -72,6 +72,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/field-reports/`: structured field captures (location, photos, notes) from the Telegram multimodal capture bot. Kept separate from `wiki/journal/` because these are structured/repeatable, not narrative. See `wiki/field-reports/README.md`.
 - `wiki/patterns/`: durable technical/architectural patterns coding agents check before building something new in a project, each linked to a real reference implementation. See `wiki/patterns/README.md`.
 - `wiki/projects/`: per-project grouping of plans, session logs, and takeaways for a specific ongoing project, once that project has earned enough of that content to be worth grouping. See `wiki/projects/README.md`.
+- `wiki/content/`: Adam's own content production pipeline, in three sibling stage directories — `ideas/`, `drafts/`, `output/` — joined by a shared kebab-case **slug** rather than by nesting. The same slug names the file at every stage (`ideas/{slug}.md`, `drafts/{slug}.md`, `output/{slug}.md`), so a piece can be walked from spark to publication by filename alone. Outputs fan out as `output/{slug}--{channel}.md` (everything before the first `--` is the slug); ideas and drafts stay one file per slug. Slugs never carry dates or version suffixes, and are never renamed once a later stage exists. Promotion creates the next stage's file without moving or deleting the previous one — the idea bank keeps its misses. Distinct from `wiki/pages/` because this is production *out*, not compiled knowledge *in*: a page is done when it's accurate, a content item when it's published. `type:` is `idea`, `draft`, or `output`, each with its own closed `status` set (see below). Create files with `content new --slug X --title "..."` and `content promote --slug X --to draft|output [--channel C]` rather than by hand - `promote` inherits title/project, writes the back-link, advances the previous stage's status without walking it backwards, and refuses to skip a stage. `content_note_text()` in `scripts/wiki_tool.py` is the single definition of a content note's shape; the Templater templates mirror it for the Obsidian-side human path. Run `python3 scripts/wiki_tool.py content status` to check the convention holds. See `wiki/content/README.md`.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
 - Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
 
@@ -95,6 +96,7 @@ Everything uncertain or unprocessed lands in `wiki/inbox/` — raw source materi
 - Put person-specific records in `wiki/crm/`.
 - Put structured field captures (location, photos, notes from the field) in `wiki/field-reports/`.
 - Put durable, reusable technical/architectural patterns in `wiki/patterns/`.
+- Put Adam's own content-in-production in `wiki/content/{ideas,drafts,output}/`, named by shared slug. A half-formed thought for something he might publish is an *idea*, not a `wiki/pages/` note — file it in `wiki/content/ideas/` and let it stay there if it never progresses.
 
 Telegram voice notes may go directly into `wiki/journal/` when an automation has already turned them into coherent dated note entries. They do not need to pass through `wiki/inbox/` first unless the raw transcript itself is worth preserving as source material.
 
@@ -160,6 +162,23 @@ Not every page needs every section. Keep pages compact and composable.
   pivoted along the way. Add a brief `Outcome` note in the body explaining what actually
   happened when it diverges from the original design, rather than inventing an `abandoned`
   status.
+
+`wiki/content/` notes use a closed `status` set per `type:` for the same reason — `content
+status` reads them:
+
+| type     | statuses                                  |
+|----------|-------------------------------------------|
+| `idea`   | `raw`, `developing`, `drafted`, `shelved` |
+| `draft`  | `in-progress`, `ready`, `shelved`         |
+| `output` | `scheduled`, `published`, `shelved`       |
+
+`shelved` is the end state for anything abandoned at any stage — use it rather than deleting,
+so the idea bank keeps its misses. Extend the sets in `CONTENT_STATUSES` (`scripts/wiki_tool.py`)
+and `wiki/content/README.md` together if one is genuinely missing.
+
+Status records vault pipeline stage only, never sync state with an external site: an idea is
+`drafted` exactly when `drafts/{slug}.md` exists. Sync state belongs in its own fields
+(`source_external_id`, an output's `url`).
 
 ## Source Page Requirements
 
@@ -381,6 +400,7 @@ When asked to lint or health-check the wiki, look for:
 - CRM records that are mentioned elsewhere but do not exist yet
 - untriaged files sitting at the `wiki/` root inbox
 - `wiki/inbox/` items past a couple weeks old with no triage decision made
+- broken `wiki/content/` joins: drafts or outputs whose slug has no idea, frontmatter `slug`/`channel` disagreeing with the filename, off-enum statuses, `drafted` ideas with no draft, or `developing` ideas idle past 30 days with no draft (`content status`)
 
 Prefer producing concrete fixes, not only observations.
 
@@ -403,6 +423,7 @@ python3 scripts/wiki_tool.py orphan-notes
 python3 scripts/wiki_tool.py cross-link-candidates
 python3 scripts/wiki_tool.py dead-links
 python3 scripts/wiki_tool.py root-inbox
+python3 scripts/wiki_tool.py content status
 python3 scripts/synthesis_report.py --dry-run
 ```
 

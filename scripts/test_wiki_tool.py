@@ -162,5 +162,110 @@ class WikiToolEditTest(unittest.TestCase):
             self.run_cli("plan", "set-status", "--project", "demo", "--date", "1999-01-01", "--status", "done")
 
 
+class ContentPipelineTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.wiki = root / "wiki"
+        for folder in wiki_tool.CONTENT_DIRS.values():
+            (self.wiki / folder).mkdir(parents=True)
+        for name, value in {"ROOT": root, "WIKI_DIR": self.wiki}.items():
+            patcher = mock.patch.object(wiki_tool, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def run_cli(self, *argv: str) -> int:
+        args = wiki_tool.build_parser().parse_args(list(argv))
+        return args.func(args)
+
+    def frontmatter(self, stage: str, slug: str, channel: str = "") -> dict:
+        path = wiki_tool.content_path(stage, slug, channel)
+        return wiki_tool.parse_frontmatter(path.read_text(encoding="utf-8"))[0]
+
+    def test_content_new_writes_an_idea_at_the_first_status(self) -> None:
+        self.run_cli("content", "new", "--slug", "a-real-idea", "--title", "A Real Idea: With Colon")
+        frontmatter = self.frontmatter("idea", "a-real-idea")
+        self.assertEqual(frontmatter["type"], "idea")
+        self.assertEqual(frontmatter["slug"], "a-real-idea")
+        self.assertEqual(frontmatter["status"], "raw")
+        self.assertEqual(frontmatter["title"], "A Real Idea: With Colon")
+
+    def test_content_new_rejects_a_non_kebab_case_slug(self) -> None:
+        with self.assertRaises(wiki_tool.WikiError):
+            self.run_cli("content", "new", "--slug", "Not A Slug")
+
+    def test_content_new_refuses_to_overwrite_an_existing_idea(self) -> None:
+        self.run_cli("content", "new", "--slug", "taken")
+        with self.assertRaises(wiki_tool.WikiError):
+            self.run_cli("content", "new", "--slug", "taken")
+
+    def test_content_promote_requires_the_previous_stage(self) -> None:
+        with self.assertRaises(wiki_tool.WikiError):
+            self.run_cli("content", "promote", "--slug", "nothing-here", "--to", "draft")
+
+    def test_content_promote_to_draft_advances_the_idea_and_inherits_its_title(self) -> None:
+        self.run_cli("content", "new", "--slug", "chain", "--title", "Chain Title", "--project", "demo")
+        self.run_cli("content", "promote", "--slug", "chain", "--to", "draft")
+        self.assertEqual(self.frontmatter("idea", "chain")["status"], "drafted")
+        draft = self.frontmatter("draft", "chain")
+        self.assertEqual(draft["title"], "Chain Title")
+        self.assertEqual(draft["project"], "demo")
+        self.assertEqual(draft["status"], "in-progress")
+
+    def test_content_promote_to_output_uses_the_channel_suffix_and_advances_the_draft(self) -> None:
+        self.run_cli("content", "new", "--slug", "fanned")
+        self.run_cli("content", "promote", "--slug", "fanned", "--to", "draft")
+        self.run_cli("content", "promote", "--slug", "fanned", "--to", "output", "--channel", "x-thread")
+        path = wiki_tool.content_path("output", "fanned", "x-thread")
+        self.assertTrue(path.exists())
+        self.assertEqual(path.name, "fanned--x-thread.md")
+        self.assertEqual(self.frontmatter("output", "fanned", "x-thread")["channel"], "x-thread")
+        self.assertEqual(self.frontmatter("draft", "fanned")["status"], "ready")
+
+    def test_content_promote_never_walks_a_status_backwards(self) -> None:
+        self.run_cli("content", "new", "--slug", "shelved-one")
+        idea_path = wiki_tool.content_path("idea", "shelved-one")
+        idea_path.write_text(
+            wiki_tool.set_frontmatter_value(idea_path.read_text(encoding="utf-8"), "status", "shelved"),
+            encoding="utf-8",
+        )
+        self.run_cli("content", "promote", "--slug", "shelved-one", "--to", "draft")
+        self.assertEqual(self.frontmatter("idea", "shelved-one")["status"], "shelved")
+
+    def test_content_status_flags_a_draft_with_no_idea(self) -> None:
+        wiki_tool.content_path("draft", "orphan").write_text(
+            wiki_tool.content_note_text("draft", "orphan", "Orphan"), encoding="utf-8"
+        )
+        problems = wiki_tool.content_problems(wiki_tool.content_items(), stale_days=30)
+        self.assertTrue(any("no idea for slug `orphan`" in problem for problem in problems))
+
+    def write_idea(self, slug: str, status: str, updated: str = wiki_tool.TODAY) -> None:
+        text = wiki_tool.content_note_text("idea", slug, slug)
+        for key, value in {"status": status, "updated": updated}.items():
+            text = wiki_tool.set_frontmatter_value(text, key, value)
+        wiki_tool.content_path("idea", slug).write_text(text, encoding="utf-8")
+
+    def test_content_status_flags_a_drafted_idea_with_no_draft(self) -> None:
+        self.write_idea("claims-drafted", "drafted")
+        problems = wiki_tool.content_problems(wiki_tool.content_items(), stale_days=30)
+        self.assertTrue(any("status `drafted` but no draft" in problem for problem in problems))
+
+    def test_content_status_leaves_an_old_raw_idea_alone(self) -> None:
+        self.write_idea("banked", "raw", updated="2000-01-01")
+        self.assertEqual(wiki_tool.content_problems(wiki_tool.content_items(), stale_days=30), [])
+
+    def test_content_status_flags_an_old_developing_idea_with_no_draft(self) -> None:
+        self.write_idea("stalled", "developing", updated="2000-01-01")
+        problems = wiki_tool.content_problems(wiki_tool.content_items(), stale_days=30)
+        self.assertTrue(any("idle since 2000-01-01" in problem for problem in problems))
+
+    def test_content_status_accepts_everything_the_commands_produce(self) -> None:
+        self.run_cli("content", "new", "--slug", "clean-one")
+        self.run_cli("content", "promote", "--slug", "clean-one", "--to", "draft")
+        self.run_cli("content", "promote", "--slug", "clean-one", "--to", "output", "--channel", "blog")
+        self.assertEqual(wiki_tool.content_problems(wiki_tool.content_items(), stale_days=30), [])
+
+
 if __name__ == "__main__":
     unittest.main()

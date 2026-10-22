@@ -39,6 +39,9 @@ CATALOG_DIRS = {
     "journal": "journal",
     "field-reports": "field-report",
     "patterns": "pattern",
+    "content/ideas": "idea",
+    "content/drafts": "draft",
+    "content/output": "output",
 }
 SECTION_LABELS = {
     "topics": "Topics",
@@ -47,6 +50,9 @@ SECTION_LABELS = {
     "journal": "Journal",
     "field-reports": "Field Reports",
     "patterns": "Patterns",
+    "content/ideas": "Content: Ideas",
+    "content/drafts": "Content: Drafts",
+    "content/output": "Content: Output",
 }
 EMPTY_MESSAGES = {
     "topics": "No topic pages yet.",
@@ -55,11 +61,23 @@ EMPTY_MESSAGES = {
     "journal": "No journal pages yet.",
     "field-reports": "No field reports yet.",
     "patterns": "No patterns yet.",
+    "content/ideas": "No content ideas yet.",
+    "content/drafts": "No content drafts yet.",
+    "content/output": "No published output yet.",
 }
-# field-report/pattern notes don't carry the full common-frontmatter contract
-# (no status/created/updated requirement) - only require what they already use.
+# Closed status sets per content type, so `content status` can rely on them.
+# See wiki/content/README.md - extend both together if one is genuinely missing.
+CONTENT_STATUSES = {
+    "idea": ("raw", "developing", "drafted", "shelved"),
+    "draft": ("in-progress", "ready", "shelved"),
+    "output": ("scheduled", "published", "shelved"),
+}
+CONTENT_DIRS = {"idea": "content/ideas", "draft": "content/drafts", "output": "content/output"}
+# field-report/pattern/content notes don't carry the full common-frontmatter
+# contract (no status/created/updated requirement) - only require what they
+# already use. Content notes are checked by `content status` instead.
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
-ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway"}
+ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway", "idea", "draft", "output"}
 SKIP_FILENAMES = {"README.md", "index.md"}
 WIKI_ROOT_CORE_FILES = {"index.md", "log.md", "overview.md", "todo.md", "todo-archive.md", "catalog.jsonl"}
 STOPWORDS = {
@@ -235,6 +253,19 @@ def load_catalog_notes() -> list[Note]:
         for path in iter_note_files(folder):
             notes.append(load_note(path, default_type))
     return sorted(notes, key=lambda note: note.rel_path)
+
+
+def catalog_dir_key(rel_path: str) -> str:
+    """Return the CATALOG_DIRS key a note's repo-relative path falls under.
+
+    Not just `parts[1]`: nested catalog dirs (content/ideas, ...) need the
+    longest matching key, so grouping lines up with CATALOG_DIRS itself.
+    """
+    inner = Path(rel_path).relative_to("wiki").as_posix()
+    for key in sorted(CATALOG_DIRS, key=len, reverse=True):
+        if inner.startswith(f"{key}/"):
+            return key
+    return Path(rel_path).parts[1]
 
 
 def promotion_notes(note_types: set[str] | None = None) -> list[Note]:
@@ -676,6 +707,9 @@ def root_inbox_files() -> list[Path]:
 
 def build_folder_index(folder_name: str, notes: list[Note]) -> None:
     folder = WIKI_DIR / folder_name
+    # Self-heal a missing catalog dir: most of wiki/ is gitignored, so nested
+    # stage dirs (content/*) can be absent on a fresh clone until synced.
+    folder.mkdir(parents=True, exist_ok=True)
     index_path = folder / "index.md"
     title = SECTION_LABELS.get(folder_name, folder_name.replace("-", " ").title())
     lines = [
@@ -698,7 +732,7 @@ def build_folder_index(folder_name: str, notes: list[Note]) -> None:
 def build_root_index(notes: list[Note]) -> None:
     grouped: dict[str, list[Note]] = defaultdict(list)
     for note in notes:
-        folder_name = Path(note.rel_path).parts[1]
+        folder_name = catalog_dir_key(note.rel_path)
         grouped[folder_name].append(note)
 
     lines = [
@@ -723,6 +757,9 @@ def build_root_index(notes: list[Note]) -> None:
         ("journal", SECTION_LABELS["journal"]),
         ("field-reports", SECTION_LABELS["field-reports"]),
         ("patterns", SECTION_LABELS["patterns"]),
+        ("content/ideas", SECTION_LABELS["content/ideas"]),
+        ("content/drafts", SECTION_LABELS["content/drafts"]),
+        ("content/output", SECTION_LABELS["content/output"]),
     ]
 
     lines.append("### Inbox")
@@ -764,6 +801,7 @@ def command_doctor(_: argparse.Namespace) -> int:
         WIKI_DIR / "pages",
         WIKI_DIR / "crm",
         WIKI_DIR / "journal",
+        WIKI_DIR / "content",
     ]
     missing = [repo_relative(path) for path in required if not path.exists()]
     if missing:
@@ -783,7 +821,7 @@ def command_build(_: argparse.Namespace) -> int:
     write_jsonl(CATALOG_PATH, rows)
     grouped: dict[str, list[Note]] = defaultdict(list)
     for note in notes:
-        folder_name = Path(note.rel_path).parts[1]
+        folder_name = catalog_dir_key(note.rel_path)
         grouped[folder_name].append(note)
     for folder_name in CATALOG_DIRS:
         build_folder_index(folder_name, grouped.get(folder_name, []))
@@ -1150,6 +1188,231 @@ def command_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+@dataclass
+class ContentItem:
+    """One stage file in wiki/content/, keyed by its slug."""
+
+    slug: str
+    stage: str
+    channel: str
+    note: Note
+
+
+def split_output_name(stem: str) -> tuple[str, str]:
+    """`slug--channel` -> (slug, channel); a bare stem has no channel."""
+    slug, separator, channel = stem.partition("--")
+    return (slug, channel) if separator else (stem, "")
+
+
+def content_items() -> list[ContentItem]:
+    stage_by_dir = {folder_name: stage for stage, folder_name in CONTENT_DIRS.items()}
+    items: list[ContentItem] = []
+    for note in load_catalog_notes():
+        stage = stage_by_dir.get(catalog_dir_key(note.rel_path))
+        if stage is None:
+            continue
+        stem = Path(note.rel_path).stem
+        slug, channel = split_output_name(stem) if stage == "output" else (stem, "")
+        items.append(ContentItem(slug=slug, stage=stage, channel=channel, note=note))
+    return items
+
+
+def content_problems(items: list[ContentItem], stale_days: int) -> list[str]:
+    problems: list[str] = []
+    idea_slugs = {item.slug for item in items if item.stage == "idea"}
+    cutoff = date.fromisoformat(TODAY) - timedelta(days=stale_days)
+
+    for item in sorted(items, key=lambda entry: entry.note.rel_path):
+        note, stage = item.note, item.stage
+        if stage != "idea" and item.slug not in idea_slugs:
+            problems.append(f"{note.rel_path}: no idea for slug `{item.slug}`")
+
+        declared = note.frontmatter.get("slug")
+        if isinstance(declared, str) and declared.strip() and declared.strip() != item.slug:
+            problems.append(f"{note.rel_path}: frontmatter slug `{declared.strip()}` != filename slug `{item.slug}`")
+
+        status = str(note.frontmatter.get("status", "")).strip()
+        allowed = CONTENT_STATUSES[stage]
+        if status not in allowed:
+            shown = status or "(missing)"
+            problems.append(f"{note.rel_path}: status `{shown}` not one of {', '.join(allowed)}")
+
+        if stage == "output":
+            channel = str(note.frontmatter.get("channel", "")).strip()
+            if item.channel and channel and channel != item.channel:
+                problems.append(f"{note.rel_path}: frontmatter channel `{channel}` != filename channel `{item.channel}`")
+
+    draft_slugs = {item.slug for item in items if item.stage == "draft"}
+    for item in sorted((i for i in items if i.stage == "idea"), key=lambda entry: entry.slug):
+        if item.slug in draft_slugs:
+            continue
+        status = str(item.note.frontmatter.get("status", "")).strip()
+        if status == "drafted":
+            problems.append(f"{item.note.rel_path}: status `drafted` but no draft for slug `{item.slug}`")
+            continue
+        # `raw` is the idea bank and may sit indefinitely; only in-flight ideas go stale.
+        if status != "developing":
+            continue
+        touched = str(item.note.frontmatter.get("updated") or item.note.frontmatter.get("created") or "").strip()
+        try:
+            if date.fromisoformat(touched) < cutoff:
+                problems.append(f"{item.note.rel_path}: idle since {touched}, no draft ({stale_days}+ days)")
+        except ValueError:
+            problems.append(f"{item.note.rel_path}: unreadable created/updated date `{touched or '(missing)'}`")
+    return problems
+
+
+SLUG_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+# Status the previous stage moves to once the next stage exists.
+ADVANCED_STATUS = {"idea": "drafted", "draft": "ready"}
+
+
+def content_path(stage: str, slug: str, channel: str = "") -> Path:
+    name = f"{slug}--{channel}" if (stage == "output" and channel) else slug
+    return WIKI_DIR / CONTENT_DIRS[stage] / f"{name}.md"
+
+
+def yaml_quote(value: str) -> str:
+    """Quote a frontmatter scalar - titles routinely contain `:` and `?`."""
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def content_note_text(
+    stage: str,
+    slug: str,
+    title: str,
+    *,
+    project: str = "",
+    channel: str = "",
+    spark: str = "",
+) -> str:
+    """The single definition of a content note's shape.
+
+    wiki/templates/content-*-template.md mirror this for the Obsidian-side
+    human path; `content status` validates whichever route produced the file,
+    so the two can't drift silently.
+    """
+    lines = [
+        "---",
+        f"title: {yaml_quote(title)}",
+        f"type: {stage}",
+        f"slug: {slug}",
+        f"status: {CONTENT_STATUSES[stage][0]}",
+        f"created: {TODAY}",
+        f"updated: {TODAY}",
+    ]
+    if stage == "output":
+        lines.append(f"channel: {channel}")
+        lines.extend(["published:", "url:"])
+    if project:
+        lines.append(f"project: {project}")
+    lines.append("tags:")
+    lines.append("  - content")
+    if project:
+        lines.append(f"  - {project}")
+    lines.extend(["---", "", f"# {title}", ""])
+
+    if stage == "idea":
+        lines.extend(["## The Spark", "", spark or "_What prompted this._", ""])
+        lines.extend(["## Why It Might Land", "", "- ", "", "## Possible Channels", "", "- ", ""])
+    elif stage == "draft":
+        lines.extend([f"Idea: [{slug}](../ideas/{slug}.md)", "", "## Argument", ""])
+        lines.extend(["The one thing this piece is actually claiming.", "", "## Draft", "", "## Open Questions", "", "- ", ""])
+    else:
+        lines.extend([f"Draft: [{slug}](../drafts/{slug}.md)", "", "## Final Copy", ""])
+        lines.extend(["## Publication Notes", "", "- ", ""])
+    return "\n".join(lines)
+
+
+def command_content_new(args: argparse.Namespace) -> int:
+    slug = args.slug.strip()
+    if not SLUG_PATTERN.fullmatch(slug):
+        raise WikiError(f"slug must be kebab-case ([a-z0-9] and single hyphens): `{slug}`")
+    path = content_path("idea", slug)
+    if path.exists():
+        raise WikiError(f"already exists: {repo_relative(path)}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    title = (args.title or slug.replace("-", " ")).strip()
+    write_text_atomic(path, content_note_text("idea", slug, title, project=args.project or "", spark=args.spark or ""))
+    print(f"content_new={repo_relative(path)}")
+    return 0
+
+
+def command_content_promote(args: argparse.Namespace) -> int:
+    slug = args.slug.strip()
+    stage = args.to
+    channel = (args.channel or "").strip()
+    if stage == "output" and channel and not SLUG_PATTERN.fullmatch(channel):
+        raise WikiError(f"channel must be kebab-case: `{channel}`")
+
+    previous_stage = "idea" if stage == "draft" else "draft"
+    previous_path = content_path(previous_stage, slug)
+    if not previous_path.exists():
+        raise WikiError(
+            f"no {previous_stage} for slug `{slug}` ({repo_relative(previous_path)} missing) - "
+            f"the stages are a chain, so create the {previous_stage} first"
+        )
+
+    path = content_path(stage, slug, channel)
+    if path.exists():
+        raise WikiError(f"already exists: {repo_relative(path)}")
+
+    previous_text = previous_path.read_text(encoding="utf-8")
+    previous_frontmatter, _ = parse_frontmatter(previous_text)
+    title = str(previous_frontmatter.get("title") or slug.replace("-", " ")).strip()
+    project = str(previous_frontmatter.get("project") or "").strip()
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_text_atomic(path, content_note_text(stage, slug, title, project=project, channel=channel))
+
+    # Advance the previous stage, but never walk a status backwards.
+    advanced = ADVANCED_STATUS[previous_stage]
+    current = str(previous_frontmatter.get("status") or "").strip()
+    order = CONTENT_STATUSES[previous_stage]
+    if current in order and order.index(advanced) > order.index(current):
+        write_text_atomic(previous_path, set_frontmatter_value(previous_text, "status", advanced))
+        print(f"{previous_stage}_status={advanced} file={repo_relative(previous_path)}")
+    print(f"content_promote={repo_relative(path)}")
+    return 0
+
+
+def command_content(args: argparse.Namespace) -> int:
+    if args.action == "new":
+        return command_content_new(args)
+    if args.action == "promote":
+        return command_content_promote(args)
+    items = content_items()
+    by_slug: dict[str, list[ContentItem]] = defaultdict(list)
+    for item in items:
+        by_slug[item.slug].append(item)
+
+    if not by_slug:
+        print("content_slugs=0")
+        return 0
+
+    width = max(len(slug) for slug in by_slug)
+    for slug in sorted(by_slug):
+        stages = by_slug[slug]
+        cells = []
+        for stage in CONTENT_DIRS:
+            matching = [item for item in stages if item.stage == stage]
+            if not matching:
+                cells.append(f"{stage}:-")
+                continue
+            statuses = ",".join(
+                f"{item.channel or stage}={str(item.note.frontmatter.get('status', '')).strip() or '?'}"
+                for item in sorted(matching, key=lambda entry: entry.channel)
+            )
+            cells.append(f"{stage}:{statuses}")
+        print(f"{slug.ljust(width)}  {'  '.join(cells)}")
+
+    problems = content_problems(items, args.stale_days)
+    print(f"\ncontent_slugs={len(by_slug)} files={len(items)} problems={len(problems)}")
+    for problem in problems:
+        print(f"- {problem}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="LLM wiki maintenance tool")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1171,6 +1434,7 @@ def build_parser() -> argparse.ArgumentParser:
         "log": command_log,
         "todo": command_todo,
         "plan": command_plan,
+        "content": command_content,
     }
 
     subparsers.add_parser("doctor")
@@ -1219,6 +1483,21 @@ def build_parser() -> argparse.ArgumentParser:
     plan_status_parser.add_argument("--date", required=True, help="plan file date, YYYY-MM-DD")
     plan_status_parser.add_argument("--status", required=True, choices=PLAN_STATUSES)
     plan_status_parser.add_argument("--note", help="replaces the body's **Status:** line text")
+    content_parser = subparsers.add_parser("content")
+    content_subparsers = content_parser.add_subparsers(dest="action", required=True)
+    content_status_parser = content_subparsers.add_parser("status")
+    content_status_parser.add_argument(
+        "--stale-days", type=int, default=30, help="flag developing ideas with no draft older than this"
+    )
+    content_new_parser = content_subparsers.add_parser("new")
+    content_new_parser.add_argument("--slug", required=True, help="kebab-case join key, also the filename")
+    content_new_parser.add_argument("--title", help="human-readable title (defaults to the slug, de-hyphenated)")
+    content_new_parser.add_argument("--spark", help="the idea itself, one or two sentences")
+    content_new_parser.add_argument("--project", help="tracked project slug, when the content is about one")
+    content_promote_parser = content_subparsers.add_parser("promote")
+    content_promote_parser.add_argument("--slug", required=True)
+    content_promote_parser.add_argument("--to", required=True, choices=["draft", "output"])
+    content_promote_parser.add_argument("--channel", help="output only, e.g. newsletter / x-thread / blog")
 
     parser.set_defaults(func=lambda args: commands[args.command](args))
     return parser
