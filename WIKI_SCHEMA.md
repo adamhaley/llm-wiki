@@ -205,7 +205,10 @@ tags:
 ---
 ```
 
-The `sources` field should list repo-relative file paths such as `wiki/inbox/article.md`. Pages promoted from inbox material or journal entries may omit `sources` or reference the originating file path instead.
+The `sources` field should list repo-relative file paths such as `wiki/inbox/article.md`, and
+`lint` enforces that every entry exists under `wiki/inbox/`. An external reference that has no
+inbox file — a Google Sheet, a live dashboard — does **not** belong in `sources`; put it in
+`source_url:` (unvalidated) or the body's `Links` section instead. Pages promoted from inbox material or journal entries may omit `sources` or reference the originating file path instead.
 
 ## CRM Record Shape
 
