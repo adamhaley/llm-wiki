@@ -4,7 +4,6 @@ scripts/__pycache__/
 scripts/state.json
 Schema/source-manifest.jsonl
 wiki/*
-!wiki/.obsidian/
 !wiki/content/
 !wiki/crm/
 !wiki/field-reports/
@@ -38,15 +37,3 @@ wiki/templates/*
 !wiki/templates/*.md
 wiki/topics/*
 !wiki/topics/README.md
-wiki/.obsidian/workspace.json
-wiki/.obsidian/workspace-mobile.json
-wiki/.obsidian/cache/
-wiki/.obsidian/plugins/
-wiki/.obsidian/logs/
-wiki/.obsidian/data.json
-wiki/.obsidian/appearance.json
-wiki/.obsidian/graph.json
-wiki/.obsidian/themes/
-wiki/.obsidian/*
-!wiki/.obsidian/app.json
-!wiki/.obsidian/core-plugins.json

@@ -29,7 +29,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - The agent reads `wiki/inbox/` and maintains the rest of `wiki/`.
 - `wiki/inbox/` items marked `status: archived` are provenance records (e.g. a promoted source's `raw_source` target) — do not edit their content in place, only their status.
 - The rest of `wiki/` is editable. Prefer incremental edits over wholesale rewrites.
-- Git is for versioned maintenance behavior such as scripts, schemas, agent instructions, templates, and selected shared vault configuration.
+- Git is for versioned maintenance behavior such as scripts, schemas, agent instructions, and templates — the second brain's functionality, never its content.
 - Obsidian Sync is the primary live sync path for all vault content, including `wiki/inbox/`.
 - Durable note content under `wiki/` may be git-ignored by default.
 - The index and log are mandatory maintenance files.
@@ -55,7 +55,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 
 ### `wiki/`
 
-- `wiki/.obsidian/`: vault-local Obsidian settings.
+- `wiki/.obsidian/`: Obsidian settings, owned by Obsidian Sync and git-ignored in full (see Sync Boundary).
 - `wiki/` root (loose files): an in-vault inbox for hand-dropped material, distinct from `wiki/inbox/`. The user occasionally pastes or saves files directly at the vault root between sessions. No frontmatter or naming convention is required there. Run `python3 scripts/wiki_tool.py root-inbox` to list what's waiting and triage each file into the correct subdirectory or into `wiki/inbox/` (or delete it if it's debris, e.g. an empty stub). Don't leave files there indefinitely.
 - `wiki/inbox/`: single landing zone for everything not yet triaged — raw source material and Web Clipper captures alike. Not catalog-indexed, not linted. See `wiki/inbox/README.md`.
 - `wiki/inbox/assets/`: local images, figures, screenshots, or attachments.
@@ -74,7 +74,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `wiki/projects/`: per-project grouping of plans, session logs, and takeaways for a specific ongoing project, once that project has earned enough of that content to be worth grouping. See `wiki/projects/README.md`.
 - `wiki/content/`: Adam's own content production pipeline, in three sibling stage directories — `ideas/`, `drafts/`, `output/` — joined by a shared kebab-case **slug** rather than by nesting. The same slug names the file at every stage (`ideas/{slug}.md`, `drafts/{slug}.md`, `output/{slug}.md`), so a piece can be walked from spark to publication by filename alone. Outputs fan out as `output/{slug}--{channel}.md` (everything before the first `--` is the slug); ideas and drafts stay one file per slug. Slugs never carry dates or version suffixes, and are never renamed once a later stage exists. Promotion creates the next stage's file without moving or deleting the previous one — the idea bank keeps its misses. Distinct from `wiki/pages/` because this is production *out*, not compiled knowledge *in*: a page is done when it's accurate, a content item when it's published. `type:` is `idea`, `draft`, or `output`, each with its own closed `status` set (see below). Create files with `content new --slug X --title "..."` and `content promote --slug X --to draft|output [--channel C]` rather than by hand - `promote` inherits title/project, writes the back-link, advances the previous stage's status without walking it backwards, and refuses to skip a stage. `content_note_text()` in `scripts/wiki_tool.py` is the single definition of a content note's shape; the Templater templates mirror it for the Obsidian-side human path. Run `python3 scripts/wiki_tool.py content status` to check the convention holds. See `wiki/content/README.md`.
 - `wiki/catalog.jsonl`: generated machine-readable note catalog.
-- Most content files under `wiki/` may remain untracked in git except for scaffolding, templates, and explicitly shared configuration.
+- Most content files under `wiki/` may remain untracked in git except for scaffolding and templates.
 
 ### `Schema/`
 
@@ -104,6 +104,7 @@ Telegram voice notes may go directly into `wiki/journal/` when an automation has
 
 - Treat Obsidian Sync as the live sync system for note content when available.
 - Treat git as the versioned system layer, not as a second bidirectional sync engine for the active vault.
+- Decide by who writes a file, not what it's about: anything Obsidian writes (all of `wiki/.obsidian/`, including plugin settings that affect behavior) belongs to Sync and is never tracked. Files people or agents write deliberately (scripts, schema, templates, READMEs) belong to git. When the system depends on an Obsidian setting, git records the requirement in docs, not the settings file.
 - If git-based automation needs a clean worktree, prefer a separate clean clone rather than operating inside the active synced vault.
 - Content snapshots in git should be deliberate archival actions, not the default transport.
 

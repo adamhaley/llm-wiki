@@ -60,7 +60,7 @@ AGENTS.md
 CLAUDE.md
 WIKI_SCHEMA.md
 wiki/
-  .obsidian/     vault settings; only stable shared config is tracked
+  .obsidian/     Obsidian settings; managed by Obsidian Sync, never tracked
   inbox/         raw source material and Web Clipper captures, not yet triaged
     assets/      downloaded images and attachments
   index.md       local vault catalog, typically not tracked
@@ -85,7 +85,7 @@ wiki/
 ## Sync Boundary
 
 - Obsidian Sync is the live sync system for vault content.
-- Git is for versioning system code: scripts, schemas, agent instructions, templates, and selected vault configuration.
+- Git is for versioning system code: scripts, schemas, agent instructions, and templates. Nothing Obsidian writes, including `wiki/.obsidian/`, is tracked.
 - Do not treat git as a second live sync path for the active vault content tree.
 - If you intentionally want content snapshots in git, do that as a deliberate archival workflow rather than as the default operating mode.
 
