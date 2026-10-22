@@ -1,14 +1,14 @@
 ---
-title:
+title: <% tp.file.title %>
 type: journal
-created:
-updated:
+created: <% tp.date.now("YYYY-MM-DD") %>
+updated: <% tp.date.now("YYYY-MM-DD") %>
 source:
 tags:
   - journal
 ---
 
-# Title
+# <% tp.file.title %>
 
 ## Entry
 

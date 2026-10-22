@@ -1,16 +1,16 @@
 ---
-title:
+title: <% tp.file.title %>
 type: synthesis
 status: draft
-created:
-updated:
+created: <% tp.date.now("YYYY-MM-DD") %>
+updated: <% tp.date.now("YYYY-MM-DD") %>
 sources:
 source_count: 0
 aliases:
 tags:
 ---
 
-# Title
+# <% tp.file.title %>
 
 ## Summary
 

@@ -1,9 +1,9 @@
 ---
-title:
+title: <% tp.file.title %>
 type: crm
 status: active
-created:
-updated:
+created: <% tp.date.now("YYYY-MM-DD") %>
+updated: <% tp.date.now("YYYY-MM-DD") %>
 source_count: 0
 emails: []
 phones: []
@@ -22,7 +22,7 @@ tags:
   - crm
 ---
 
-# Title
+# <% tp.file.title %>
 
 ## Summary
 
