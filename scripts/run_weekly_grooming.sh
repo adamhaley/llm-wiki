@@ -68,28 +68,10 @@ Run the weekly grooming pass:
 9. Append one entry to wiki/log.md summarizing what changed: items promoted, items deleted, orphans fixed, cross-links added, dead links fixed, lint issues fixed, and anything left pending that needs human judgment.
 
 Keep diffs minimal, factual, and heavily cross-linked. Do not touch the n8n/Telegram journal capture pipeline — it's a separate, working system.
+
+Only edit Obsidian-synced vault content. Do not edit git-tracked files (scripts/, Schema/, AGENTS.md, WIKI_SCHEMA.md, and the tracked READMEs and templates under wiki/); this machine only pulls from git. If one of those needs a change, describe it in the wiki/log.md entry instead.
 PROMPT
 
 log "running GROOMING_AGENT_COMMAND"
 sh -c "$GROOMING_AGENT_COMMAND" <"$PROMPT_FILE" >>"$LOG_FILE" 2>&1
 log "ok: weekly grooming command completed"
-
-# The grooming agent only edits files; it never commits. .gitignore already
-# draws the durable-context-vs-synced-content line (wiki/ content is ignored
-# except the explicit README/template/schema allowlist), so `git add -A` here
-# can only ever stage the tracked instruction-layer side of that boundary -
-# never Obsidian-synced note content.
-cd "$REPO_DIR"
-git add -A
-if ! git diff --cached --quiet; then
-  git commit -m "Weekly grooming pass: $(date +%Y-%m-%d)" >>"$LOG_FILE" 2>&1
-  log "ok: committed grooming changes"
-  if git pull --rebase origin main >>"$LOG_FILE" 2>&1 && git push origin main >>"$LOG_FILE" 2>&1; then
-    log "ok: pushed grooming changes to origin/main"
-  else
-    git rebase --abort >/dev/null 2>&1 || true
-    log "warn: grooming changes committed locally but push/rebase failed - needs manual attention"
-  fi
-else
-  log "info: no tracked changes to commit after grooming pass"
-fi
