@@ -162,6 +162,28 @@ class WikiToolEditTest(unittest.TestCase):
             self.run_cli("plan", "set-status", "--project", "demo", "--date", "1999-01-01", "--status", "done")
 
 
+class OrphanCandidatesTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.wiki = root / "wiki"
+        (self.wiki / "pages").mkdir(parents=True)
+        for name, value in {"ROOT": root, "WIKI_DIR": self.wiki}.items():
+            patcher = mock.patch.object(wiki_tool, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def write_page(self, slug: str, body: str) -> None:
+        (self.wiki / "pages" / f"{slug}.md").write_text(f"---\ntitle: {slug}\ntype: page\n---\n\n{body}\n", encoding="utf-8")
+
+    def test_a_wikilink_counts_as_an_inbound_link(self) -> None:
+        self.write_page("target", "Nothing links out from here.")
+        self.write_page("source", "See [[Target|the target page]].")
+        orphans = {orphan["path"] for orphan in wiki_tool.orphan_candidates()}
+        self.assertNotIn("wiki/pages/target.md", orphans)
+
+
 class ContentPipelineTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()

@@ -488,6 +488,9 @@ def orphan_candidates() -> list[dict[str, str]]:
     all_targets = {note.path.relative_to(WIKI_DIR).as_posix(): note for note in notes}
     inbound_counts = {target: 0 for target in all_targets}
     link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+    stem_to_relative: dict[str, str] = {}
+    for relative in inbound_counts:
+        stem_to_relative.setdefault(Path(relative).stem.lower(), relative)
 
     for note in notes:
         body = note_body(note.path)
@@ -502,6 +505,14 @@ def orphan_candidates() -> list[dict[str, str]]:
                 continue
             if relative in inbound_counts:
                 inbound_counts[relative] += 1
+        for wikitarget in WIKILINK_TARGET_PATTERN.findall(body):
+            key = wikitarget.strip().lower()
+            if not key or key not in stem_to_relative:
+                continue
+            relative = stem_to_relative[key]
+            if relative == note.path.relative_to(WIKI_DIR).as_posix():
+                continue
+            inbound_counts[relative] += 1
 
     results = []
     for relative, count in sorted(inbound_counts.items()):
