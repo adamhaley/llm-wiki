@@ -39,4 +39,4 @@ python3 scripts/audit_public.py
 - Use `synthesis_report.py` to generate a review brief from new or changed journal entries and `wiki/inbox/` items.
 - Use `run_synthesis_report.sh` for cron-friendly report generation.
 - Use `run_autonomous_promotion.sh` for headless agent promotion when `AUTOPROMOTE_COMMAND` is configured.
-- Use `run_weekly_grooming.sh` on a VPS cron for the full weekly pass (lint fixes, orphan fixes, root-inbox triage, `wiki/inbox/` promotion, `overview.md` freshness) when `GROOMING_AGENT_COMMAND` is configured.
+- Use `run_weekly_grooming.sh` from the n8n "LLM Wiki Weekly Grooming" workflow for the full weekly pass (lint fixes, orphan fixes, root-inbox triage, `wiki/inbox/` promotion, `overview.md` freshness) when `GROOMING_AGENT_COMMAND` is configured.

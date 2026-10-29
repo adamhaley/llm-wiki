@@ -354,17 +354,13 @@ scripts/run_autonomous_promotion.sh
 
 That runner expects `AUTOPROMOTE_COMMAND` to name the local headless agent command that will read the generated prompt from stdin.
 
-## Weekly Grooming (VPS cron)
+## Weekly Grooming (n8n)
 
 `scripts/run_weekly_grooming.sh` is a broader pass than `run_autonomous_promotion.sh` — deterministic baseline + lint fixes + orphan fixes + root-inbox triage + `wiki/inbox/` promotion + `overview.md` freshness check, in one run. Designed to run on a schedule against the vault's headless-Obsidian-sync copy (an always-on machine, not the primary editing device), so `wiki/inbox/` gets processed regularly even when no one opens the vault for weeks.
 
 It expects `GROOMING_AGENT_COMMAND` to name the local headless agent command that will read the generated prompt from stdin, same pattern as `AUTOPROMOTE_COMMAND`.
 
-Example weekly cron (Sunday 3am local):
-
-```cron
-0 3 * * 0 cd /path/to/llm-wiki && GROOMING_AGENT_COMMAND='your-agent-command' scripts/run_weekly_grooming.sh
-```
+It runs from the n8n workflow **LLM Wiki Weekly Grooming** on the ahmedia.ai droplet (Sundays 10:00 UTC), not from cron. The workflow SSHes into the droplet as `ahmedia` (credential "ahmedia droplet (llm-wiki SSH)", a key restricted to n8n's Docker network) and runs three visible steps: `git pull --ff-only`, `python3 scripts/wiki_tool.py todo archive`, then this script with `LOG_FILE=/dev/stdout` so its output lands in the n8n execution. Claude authenticates with a long-lived `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, valid one year) kept in `/home/ahmedia/.claude-grooming.env`. Failures go to n8n's "Error Handling" workflow.
 
 ## Synthesis Prep Workflow
 
