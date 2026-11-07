@@ -3,6 +3,7 @@
 This repository is a personal "LLM wiki".
 
 Read and follow [WIKI_SCHEMA.md](WIKI_SCHEMA.md) before making any changes.
+At the start of an interactive session, read `wiki/PICKUP.md` and act on its unchecked items.
 
 ## Agent Role
 

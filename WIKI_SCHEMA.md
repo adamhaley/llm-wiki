@@ -40,6 +40,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 - `WIKI_SCHEMA.md` is the canonical authoritative instruction source for this repository.
 - `ALL_CAPS` markdown files such as `WIKI_SCHEMA.md` and `AGENTS.md` are the instruction layer: they are normative for agent behavior, should be tracked in git, and override conflicting workflow descriptions elsewhere.
 - Notes under `wiki/` are the content layer, even when they discuss workflows, systems, or second-brain process. They are durable knowledge, research, or evolving practice, not binding repo instructions by themselves.
+- `wiki/PICKUP.md` is a deliberate exception: a user-edited, Obsidian-synced instruction list for the next interactive agent session. At the start of a session working on this second brain, read it and act on unchecked items before ordinary wiki maintenance. Check off completed items with a brief outcome; leave blocked items unchecked with the blocker noted. Do not treat it as a root-inbox capture or migrate it into `wiki/todo.md`.
 - If a workflow or rule first appears in `wiki/` content and later becomes mandatory for maintenance behavior, promote that rule into the instruction layer instead of treating the content page itself as authoritative.
 - When deciding whether something belongs in git, use this boundary: instruction-layer files are tracked by default; content-layer notes may remain git-ignored by default.
 
@@ -57,6 +58,7 @@ The vault should be led by daily usage, not by abstract technical completeness. 
 
 - `wiki/.obsidian/`: Obsidian settings, owned by Obsidian Sync and git-ignored in full (see Sync Boundary).
 - `wiki/` root (loose files): an in-vault inbox for hand-dropped material, distinct from `wiki/inbox/`. The user occasionally pastes or saves files directly at the vault root between sessions. No frontmatter or naming convention is required there. Run `python3 scripts/wiki_tool.py root-inbox` to list what's waiting and triage each file into the correct subdirectory or into `wiki/inbox/` (or delete it if it's debris, e.g. an empty stub). Don't leave files there indefinitely.
+- `wiki/PICKUP.md`: the user-edited, root-level next-session instruction list. It remains at the vault root and syncs through Obsidian.
 - `wiki/inbox/`: single landing zone for everything not yet triaged — raw source material and Web Clipper captures alike. Not catalog-indexed, not linted. See `wiki/inbox/README.md`.
 - `wiki/inbox/assets/`: local images, figures, screenshots, or attachments.
 - `wiki/index.md`: vault catalog and starting point for navigation.
