@@ -159,8 +159,10 @@ Not every page needs every section. Keep pages compact and composable.
 `wiki/pages/` or `wiki/projects/{project}/plans/` — use a closed set so tooling (e.g. the
 `SessionStart` hook surfacing unexecuted plans) can rely on it:
 
-- `planned`: not yet started.
+- `planned`: not yet started, and not necessarily ready to execute.
+- `ready`: written and ready to execute. The only status the Plan-to-Preview pipeline picks up.
 - `in-progress`: actively being worked.
+- `deferred`: real work that's on hold. Set it back to `planned` or `ready` to revive it.
 - `done`: closed, however it actually resolved — including a plan that got superseded or
   pivoted along the way. Add a brief `Outcome` note in the body explaining what actually
   happened when it diverges from the original design, rather than inventing an `abandoned`

@@ -27,7 +27,7 @@ TODO_ARCHIVE_PATH = WIKI_DIR / "todo-archive.md"
 
 TODAY = date.today().isoformat()
 
-PLAN_STATUSES = ("planned", "in-progress", "done")
+PLAN_STATUSES = ("planned", "ready", "in-progress", "deferred", "done")
 
 # Folder -> default note type. entity/source/synthesis notes now live inside
 # pages/ (see ALLOWED_TYPES) and carry an explicit `type:` frontmatter value
