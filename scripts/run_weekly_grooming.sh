@@ -69,7 +69,7 @@ Run the weekly grooming pass:
 
 Keep diffs minimal, factual, and heavily cross-linked. Do not touch the n8n/Telegram journal capture pipeline — it's a separate, working system.
 
-Only edit Obsidian-synced vault content. Do not edit git-tracked files (scripts/, Schema/, AGENTS.md, WIKI_SCHEMA.md, and the tracked READMEs and templates under wiki/); this machine only pulls from git. If one of those needs a change, describe it in the wiki/log.md entry instead.
+Only edit Obsidian-synced vault content. Do not edit git-tracked files (scripts/, Schema/, AGENTS.md, CLAUDE.md, WIKI_SCHEMA.md); this machine only pulls from git. Everything under wiki/, folder READMEs and templates included, is vault content. Never run git commands that rewrite files under wiki/. If one of those needs a change, describe it in the wiki/log.md entry instead.
 PROMPT
 
 log "running GROOMING_AGENT_COMMAND"

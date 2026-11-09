@@ -23,3 +23,7 @@ Maintain the local markdown wiki in `wiki/`, which is the user-facing vault, fro
 - Treat git as the versioned maintenance layer, not as the primary live transport for vault content.
 
 This file mirrors `AGENTS.md` on purpose so the repository works with multiple coding agents.
+
+## Git vs Obsidian Sync
+
+Obsidian Sync owns everything under `wiki/`; git tracks nothing there (`.gitignore` excludes it). Never `git add` vault files. Update a clone with `git pull --ff-only` only. Never run git commands that rewrite files under `wiki/` (`checkout`, `restore`, `stash`, `reset --hard`, or switching to a commit from before PR #3): Obsidian Sync would push the result to every device.
