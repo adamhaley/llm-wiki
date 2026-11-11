@@ -28,6 +28,9 @@ TODO_ARCHIVE_PATH = WIKI_DIR / "todo-archive.md"
 TODAY = date.today().isoformat()
 
 PLAN_STATUSES = ("planned", "ready", "in-progress", "deferred", "done")
+# A project plan file is plans/YYYY-MM-DD.md or plans/YYYY-MM-DD-some-slug.md; its stem is the plan name.
+PLAN_NAME_RE = re.compile(r"\d{4}-\d{2}-\d{2}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?")
+PROJECT_SLUG_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 # Folder -> default note type. entity/source/synthesis notes now live inside
 # pages/ (see ALLOWED_TYPES) and carry an explicit `type:` frontmatter value
@@ -1191,17 +1194,17 @@ def command_todo(args: argparse.Namespace) -> int:
 
 
 def list_plans(status: str) -> list[dict[str, str]]:
-    """Project plans (wiki/projects/*/plans/YYYY-MM-DD.md) with this status."""
+    """Project plans (wiki/projects/*/plans/YYYY-MM-DD[-slug].md) with this status."""
     plans = []
     for path in sorted(WIKI_DIR.glob("projects/*/plans/*.md")):
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", path.stem):
+        if not PLAN_NAME_RE.fullmatch(path.stem):
             continue
         frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
         if frontmatter.get("status") != status:
             continue
         heading = re.search(r"(?m)^# (.+)$", body)
         title = str(frontmatter.get("title") or (heading.group(1) if heading else path.stem))
-        plans.append({"project": path.parent.parent.name, "date": path.stem,
+        plans.append({"project": path.parent.parent.name, "plan": path.stem, "date": path.stem[:10],
                       "title": title.strip(), "body": body.strip()})
     return plans
 
@@ -1210,7 +1213,11 @@ def command_plan(args: argparse.Namespace) -> int:
     if args.action == "list":
         print(json.dumps(list_plans(args.status)))
         return 0
-    path = WIKI_DIR / "projects" / args.project / "plans" / f"{args.date}.md"
+    if not PROJECT_SLUG_RE.fullmatch(args.project):
+        raise WikiError(f"bad project slug: {args.project!r}")
+    if not PLAN_NAME_RE.fullmatch(args.plan):
+        raise WikiError(f"bad plan name (want YYYY-MM-DD or YYYY-MM-DD-slug): {args.plan!r}")
+    path = WIKI_DIR / "projects" / args.project / "plans" / f"{args.plan}.md"
     if not path.exists():
         raise WikiError(f"no such plan: {repo_relative(path)}")
     write_text_atomic(path, set_plan_status(path.read_text(encoding="utf-8"), args.status, args.note))
@@ -1510,7 +1517,8 @@ def build_parser() -> argparse.ArgumentParser:
     plan_subparsers = plan_parser.add_subparsers(dest="action", required=True)
     plan_status_parser = plan_subparsers.add_parser("set-status")
     plan_status_parser.add_argument("--project", required=True)
-    plan_status_parser.add_argument("--date", required=True, help="plan file date, YYYY-MM-DD")
+    plan_status_parser.add_argument("--plan", "--date", dest="plan", required=True,
+                                    help="plan file name without .md: YYYY-MM-DD or YYYY-MM-DD-slug")
     plan_status_parser.add_argument("--status", required=True, choices=PLAN_STATUSES)
     plan_status_parser.add_argument("--note", help="replaces the body's **Status:** line text")
     plan_list_parser = plan_subparsers.add_parser("list", help="print matching plans as JSON")
