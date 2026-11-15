@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import difflib
 import json
 import re
@@ -1225,6 +1227,60 @@ def command_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+SESSION_LOG_MAX_CHARS = 4000
+
+
+def session_log_bullet(text: str) -> str:
+    """One bullet: control characters dropped, continuation lines indented."""
+    text = re.sub(r"[^\S\n]+", " ", re.sub(r"[\x00-\x08\x0b-\x1f\x7f]", "", text)).strip()
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    if not lines:
+        raise WikiError("session-log text is empty")
+    if len(text) > SESSION_LOG_MAX_CHARS:
+        raise WikiError(f"session-log text is over {SESSION_LOG_MAX_CHARS} characters")
+    first, rest = lines[0], lines[1:]
+    return "\n".join([f"- {first.removeprefix('- ')}", *(f"  {line}" for line in rest)])
+
+
+def append_session_log(text: str, bullet: str, source: str) -> str:
+    text = text.rstrip("\n")
+    gap = "\n\n" if text.rsplit("\n", 1)[-1].startswith("#") else "\n"   # a list after a heading
+    return text + f"{gap}{bullet}\n<!-- source: {source} -->\n"
+
+
+def new_session_log(project: str) -> str:
+    return (f"---\ntitle: {TODAY} {project} Session Log\ntype: journal\nproject: {project}\n"
+            f"created: {TODAY}\nupdated: {TODAY}\ntags:\n  - journal\n  - session-log\n---\n\n"
+            f"# {TODAY} {project} Session Log\n")
+
+
+def command_session_log(args: argparse.Namespace) -> int:
+    """Append one bullet to wiki/projects/<project>/session-logs/<today>.md. The text may come
+    base64-encoded (--text-b64), so callers like n8n never put it through a shell."""
+    if not PROJECT_SLUG_RE.fullmatch(args.project):
+        raise WikiError(f"bad project slug: {args.project!r}")
+    project_dir = WIKI_DIR / "projects" / args.project
+    if not project_dir.is_dir():
+        raise WikiError(f"no such project: {repo_relative(project_dir)}")
+    if not re.fullmatch(r"[a-z0-9-]{1,40}", args.source):
+        raise WikiError(f"bad source: {args.source!r}")
+    if args.text_b64 is not None:
+        try:
+            raw = base64.b64decode(args.text_b64, validate=True).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError) as error:
+            raise WikiError(f"--text-b64 is not base64 UTF-8: {error}") from error
+    else:
+        raw = args.text
+    bullet = session_log_bullet(raw)
+    path = project_dir / "session-logs" / f"{TODAY}.md"
+    path.parent.mkdir(exist_ok=True)
+    text = path.read_text(encoding="utf-8") if path.exists() else new_session_log(args.project)
+    text = set_frontmatter_value(append_session_log(text, bullet, args.source), "updated", TODAY)
+    write_text_atomic(path, text)
+    print(f"session_log=ok file={repo_relative(path)}")
+    return 0
+
+
 @dataclass
 class ContentItem:
     """One stage file in wiki/content/, keyed by its slug."""
@@ -1471,6 +1527,7 @@ def build_parser() -> argparse.ArgumentParser:
         "log": command_log,
         "todo": command_todo,
         "plan": command_plan,
+        "session-log": command_session_log,
         "content": command_content,
     }
 
@@ -1523,6 +1580,14 @@ def build_parser() -> argparse.ArgumentParser:
     plan_status_parser.add_argument("--note", help="replaces the body's **Status:** line text")
     plan_list_parser = plan_subparsers.add_parser("list", help="print matching plans as JSON")
     plan_list_parser.add_argument("--status", required=True, choices=PLAN_STATUSES)
+    session_log_parser = subparsers.add_parser(
+        "session-log", help="append a bullet to a project's session log for today")
+    session_log_parser.add_argument("--project", required=True)
+    session_text = session_log_parser.add_mutually_exclusive_group(required=True)
+    session_text.add_argument("--text", help="the bullet; extra lines become indented continuation lines")
+    session_text.add_argument("--text-b64", help="the same, base64-encoded UTF-8 (shell-safe)")
+    session_log_parser.add_argument("--source", default="manual",
+                                    help="who wrote it, recorded as a comment (e.g. agent-worker)")
     content_parser = subparsers.add_parser("content")
     content_subparsers = content_parser.add_subparsers(dest="action", required=True)
     content_status_parser = content_subparsers.add_parser("status")
