@@ -1257,13 +1257,42 @@ def set_research_status(text: str, status: str) -> str:
     return text
 
 
+RESEARCH_SLUG_MAX_WORDS = 8
+
+
+def research_note_name(stem: str, body: str) -> str:
+    """`YYYY-MM-DD-slug` for a note Adam named freely, slugged from its name or, if untitled, its question."""
+    if PLAN_NAME_RE.fullmatch(stem) and len(stem) > len(TODAY):
+        return stem
+    untitled = re.fullmatch(r"(?i)untitled(?: \d+)?|\d{4}-\d{2}-\d{2}", stem)
+    source = body.strip().split("\n", 1)[0] if untitled else stem
+    words = re.sub(r"[^a-z0-9]+", " ", source.lower()).split()[:RESEARCH_SLUG_MAX_WORDS]
+    return f"{TODAY}-{'-'.join(words) or 'question'}"
+
+
+def research_note_path(arg: str) -> Path:
+    path = ROOT / arg
+    if path.resolve().parent != (WIKI_DIR / "research").resolve() or not path.is_file():
+        raise WikiError(f"not a research note: {arg}")
+    return path
+
+
 def command_research(args: argparse.Namespace) -> int:
     if args.action == "pending":
         print(json.dumps(pending_research(args.min_age_minutes)))
         return 0
-    path = (ROOT / args.file).resolve()
-    if path.parent != (WIKI_DIR / "research").resolve() or not path.is_file():
-        raise WikiError(f"not a research note: {args.file}")
+    path = research_note_path(args.file)
+    if args.action == "claim":
+        # Rename here rather than in the agent, so the agent needs no `mv` permission.
+        _, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+        name = research_note_name(path.stem, body)
+        target, suffix = path.with_name(f"{name}.md"), 2
+        while target != path and target.exists():
+            target, suffix = path.with_name(f"{name}-{suffix}.md"), suffix + 1
+        path = path.rename(target)
+        write_text_atomic(path, set_research_status(path.read_text(encoding="utf-8"), "in-progress"))
+        print(repo_relative(path))
+        return 0
     write_text_atomic(path, set_research_status(path.read_text(encoding="utf-8"), args.status))
     print(f"research_status={args.status} file={repo_relative(path)}")
     return 0
@@ -1653,6 +1682,9 @@ def build_parser() -> argparse.ArgumentParser:
     research_pending_parser.add_argument(
         "--min-age-minutes", type=int, default=10, help="skip notes edited more recently than this (still being typed)"
     )
+    research_claim_parser = research_subparsers.add_parser(
+        "claim", help="rename to YYYY-MM-DD-slug.md, mark in-progress and print the new path")
+    research_claim_parser.add_argument("--file", required=True, help="repo-relative path, e.g. wiki/research/x.md")
     research_status_parser = research_subparsers.add_parser("set-status")
     research_status_parser.add_argument("--file", required=True, help="repo-relative path, e.g. wiki/research/x.md")
     research_status_parser.add_argument("--status", required=True, choices=RESEARCH_STATUSES)

@@ -331,3 +331,20 @@ class ResearchQueueTest(unittest.TestCase):
         args = wiki_tool.build_parser().parse_args(["research", "set-status", "--file", "wiki/todo.md", "--status", "done"])
         with self.assertRaises(wiki_tool.WikiError):
             args.func(args)
+
+    def test_claim_names_a_freely_named_note_from_its_filename(self) -> None:
+        self.assertEqual(wiki_tool.research_note_name("Cal.com vs Calendly", "Q"), f"{wiki_tool.TODAY}-cal-com-vs-calendly")
+
+    def test_claim_names_an_untitled_note_from_its_question(self) -> None:
+        self.assertEqual(wiki_tool.research_note_name("Untitled 2", "Is Postgres faster than MySQL?\nMore."), f"{wiki_tool.TODAY}-is-postgres-faster-than-mysql")
+
+    def test_claim_keeps_an_already_dated_name(self) -> None:
+        self.assertEqual(wiki_tool.research_note_name("2020-01-01-espresso", "Q"), "2020-01-01-espresso")
+
+    def test_claim_renames_without_overwriting_and_marks_in_progress(self) -> None:
+        self.write(f"{wiki_tool.TODAY}-a-b.md", "taken")
+        self.write("A b.md", "Question?")
+        args = wiki_tool.build_parser().parse_args(["research", "claim", "--file", "wiki/research/A b.md"])
+        args.func(args)
+        claimed = self.research / f"{wiki_tool.TODAY}-a-b-2.md"
+        self.assertEqual(wiki_tool.parse_frontmatter(claimed.read_text())[0]["status"], "in-progress")
