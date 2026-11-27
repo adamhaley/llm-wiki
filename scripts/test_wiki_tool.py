@@ -291,3 +291,43 @@ class ContentPipelineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResearchQueueTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.research = root / "wiki" / "research"
+        self.research.mkdir(parents=True)
+        for name, value in {"ROOT": root, "WIKI_DIR": root / "wiki"}.items():
+            patcher = mock.patch.object(wiki_tool, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.research / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_pending_picks_up_a_bare_question_and_skips_answered_or_empty_notes(self) -> None:
+        self.write("Untitled.md", "What is the best espresso grinder under $300?\n")
+        self.write("2020-01-01-old.md", "---\ntype: research\nstatus: done\n---\n\nAnswered.\n")
+        self.write("empty.md", "")
+        self.assertEqual(wiki_tool.pending_research(0), ["wiki/research/Untitled.md"])
+
+    def test_pending_skips_a_question_still_being_typed(self) -> None:
+        self.write("Untitled.md", "What is the")
+        self.assertEqual(wiki_tool.pending_research(10), [])
+
+    def test_set_status_adds_frontmatter_to_a_bare_question(self) -> None:
+        self.assertTrue(wiki_tool.set_research_status("A question?\n", "in-progress").startswith("---\ntype: research\nstatus: in-progress\n"))
+
+    def test_set_status_replaces_an_existing_status(self) -> None:
+        text = wiki_tool.set_research_status("---\ntitle: X\nstatus: queued\n---\n\nQ\n", "failed")
+        self.assertEqual(wiki_tool.parse_frontmatter(text)[0]["status"], "failed")
+
+    def test_set_status_rejects_a_file_outside_research(self) -> None:
+        args = wiki_tool.build_parser().parse_args(["research", "set-status", "--file", "wiki/todo.md", "--status", "done"])
+        with self.assertRaises(wiki_tool.WikiError):
+            args.func(args)

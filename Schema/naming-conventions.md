@@ -16,3 +16,4 @@ Directory intent:
 - `wiki/journal/`: dated reflection and capture notes, including daily session logs
 - `wiki/field-reports/`: structured field captures (location, photos, notes), timestamped filenames, one per capture session
 - `wiki/patterns/`: durable technical/architectural patterns, kebab-case pattern name per file
+- `wiki/research/`: agent-answered research questions, `YYYY-MM-DD-slug.md` (the runner renames a freshly typed `Untitled.md`)
