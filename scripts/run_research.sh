@@ -46,7 +46,7 @@ Adam has asked a research question in __NOTE__. Answer it in that file.
 3. Cite your sources. Every factual claim that comes from a source gets a numbered footnote ([^1]) and the "## Sources" section lists each one as: title, publisher or author, URL, publication date if known, and the date you accessed it. Prefer primary sources (official docs, papers, filings, the vendor's own pages) over aggregators and SEO content. Use at least two independent sources for any important claim, and say so when you could only find one. Mark your own inference or judgment as such rather than footnoting it. Never invent a citation or a URL you did not actually open. Cite vault pages you relied on as relative markdown links.
 4. Structure the note per wiki/research/README.md: frontmatter, H1 title, "## Answer" (a direct answer up front, then the detail), "## Question", "## Open Questions" when something stayed unresolved, "## Related" links to vault pages, "## Sources".
 5. Frontmatter: title, type: research, status: done, created (the date in the filename, or today), updated: today, tags (including research), source_urls (the list of URLs you cited).
-6. If the filename is not already YYYY-MM-DD-slug.md, rename it to today's date plus a short kebab-case slug of the question, with mv. Do not overwrite an existing file.
+6. The runner has already named the file YYYY-MM-DD-slug.md; do not rename it.
 7. Run python3 scripts/wiki_tool.py build and lint, and fix any lint problem in your note.
 8. Append one line to wiki/log.md with python3 scripts/wiki_tool.py log --title "Research: <title>" --details "<filename>".
 
@@ -55,15 +55,12 @@ PROMPT
 
 while IFS= read -r NOTE; do
   log "researching $NOTE"
-  python3 scripts/wiki_tool.py research set-status --file "$NOTE" --status in-progress >>"$LOG_FILE"
+  NOTE="$(python3 scripts/wiki_tool.py research claim --file "$NOTE")"
   PROMPT="${PROMPT_TEMPLATE//__NOTE__/$NOTE}"
   if printf "%s\n" "$PROMPT" | sh -c "$RESEARCH_AGENT_COMMAND" >>"$LOG_FILE" 2>&1; then
     log "ok: $NOTE"
   else
     log "error: agent failed on $NOTE"
-    # The agent may have renamed the note before failing; only mark it if it's still there.
-    if [[ -f "$NOTE" ]]; then
-      python3 scripts/wiki_tool.py research set-status --file "$NOTE" --status failed >>"$LOG_FILE"
-    fi
+    python3 scripts/wiki_tool.py research set-status --file "$NOTE" --status failed >>"$LOG_FILE"
   fi
 done <<<"$PENDING"
