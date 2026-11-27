@@ -374,6 +374,10 @@ It runs from the n8n workflow **LLM Wiki Weekly Grooming** on the ahmedia.ai dro
 
 It runs from the n8n workflow **LLM Wiki Research** on the ahmedia.ai droplet twice a day (03:00 and 15:00 UTC; raise the frequency in n8n if needed), over the same SSH credential as weekly grooming: `git pull --ff-only`, then this script with `LOG_FILE=/dev/stdout`. `RESEARCH_AGENT_COMMAND` keeps web research fully open but fences everything else, because a fetched page could try to steer the agent and the droplet account also hosts other sites: `claude -p --allowedTools "Read(./**),Edit(./wiki/research/**),Bash(python3 scripts/wiki_tool.py *),WebSearch,WebFetch"`. It can read only this checkout (not `~/.claude-grooming.env` or SSH keys), write only research notes, and run only `wiki_tool.py`. Loosen it (e.g. `curl` or `python3` for data analysis) only deliberately. Separately, no agent or script treats note content as instructions or executes it.
 
+## Daily Digest (n8n)
+
+`python3 scripts/wiki_tool.py digest` prints everything outstanding as JSON: unchecked `wiki/PICKUP.md` items, open `wiki/todo.md` items grouped by their `project:` prefix, open plans (`planned`, `ready`, `in-progress`), research answered in the last day or `failed`, and each project's last activity (the newest dated note under `wiki/projects/{project}/`). The n8n workflow **LLM Wiki Daily Digest** runs it on the droplet every morning, maps it onto the generic email shape in `n8n/daily-digest-build.js`, and hands that to the reusable **Send Digest Email** sub-workflow (`n8n/digest-email/`), which any other workflow can also call.
+
 ## Synthesis Prep Workflow
 
 When you want a deterministic review brief before doing higher-judgment synthesis work:
