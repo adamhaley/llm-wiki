@@ -10,6 +10,7 @@ import difflib
 import json
 import re
 import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -33,6 +34,8 @@ PLAN_STATUSES = ("planned", "ready", "in-progress", "deferred", "done")
 # A project plan file is plans/YYYY-MM-DD.md or plans/YYYY-MM-DD-some-slug.md; its stem is the plan name.
 PLAN_NAME_RE = re.compile(r"\d{4}-\d{2}-\d{2}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?")
 PROJECT_SLUG_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
+# A research note with no status (Adam just typed a question) or `queued` is waiting for the agent.
+RESEARCH_STATUSES = ("queued", "in-progress", "done", "failed")
 
 # Folder -> default note type. entity/source/synthesis notes now live inside
 # pages/ (see ALLOWED_TYPES) and carry an explicit `type:` frontmatter value
@@ -44,6 +47,7 @@ CATALOG_DIRS = {
     "journal": "journal",
     "field-reports": "field-report",
     "patterns": "pattern",
+    "research": "research",
     "content/ideas": "idea",
     "content/drafts": "draft",
     "content/output": "output",
@@ -55,6 +59,7 @@ SECTION_LABELS = {
     "journal": "Journal",
     "field-reports": "Field Reports",
     "patterns": "Patterns",
+    "research": "Research",
     "content/ideas": "Content: Ideas",
     "content/drafts": "Content: Drafts",
     "content/output": "Content: Output",
@@ -66,6 +71,7 @@ EMPTY_MESSAGES = {
     "journal": "No journal pages yet.",
     "field-reports": "No field reports yet.",
     "patterns": "No patterns yet.",
+    "research": "No research yet.",
     "content/ideas": "No content ideas yet.",
     "content/drafts": "No content drafts yet.",
     "content/output": "No published output yet.",
@@ -82,7 +88,7 @@ CONTENT_DIRS = {"idea": "content/ideas", "draft": "content/drafts", "output": "c
 # contract (no status/created/updated requirement) - only require what they
 # already use. Content notes are checked by `content status` instead.
 STRICT_NOTE_TYPES = {"source", "topic", "page", "entity", "synthesis", "crm", "plan"}
-ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway", "idea", "draft", "output"}
+ALLOWED_TYPES = {"topic", "page", "crm", "journal", "entity", "source", "synthesis", "plan", "field-report", "pattern", "reference", "takeaway", "idea", "draft", "output", "research"}
 SKIP_FILENAMES = {"README.md", "index.md"}
 WIKI_ROOT_CORE_FILES = {"PICKUP.md", "index.md", "log.md", "overview.md", "todo.md", "todo-archive.md", "catalog.jsonl"}
 STOPWORDS = {
@@ -489,7 +495,7 @@ def top_name_candidates(notes: list[Note], min_count: int, max_results: int) -> 
 
 
 def orphan_candidates() -> list[dict[str, str]]:
-    notes = [note for note in load_catalog_notes() if note.note_type != "journal"]
+    notes = [note for note in load_catalog_notes() if note.note_type not in {"journal", "research"}]
     all_targets = {note.path.relative_to(WIKI_DIR).as_posix(): note for note in notes}
     inbound_counts = {target: 0 for target in all_targets}
     link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
@@ -773,6 +779,7 @@ def build_root_index(notes: list[Note]) -> None:
         ("journal", SECTION_LABELS["journal"]),
         ("field-reports", SECTION_LABELS["field-reports"]),
         ("patterns", SECTION_LABELS["patterns"]),
+        ("research", SECTION_LABELS["research"]),
         ("content/ideas", SECTION_LABELS["content/ideas"]),
         ("content/drafts", SECTION_LABELS["content/drafts"]),
         ("content/output", SECTION_LABELS["content/output"]),
@@ -1227,6 +1234,41 @@ def command_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def pending_research(min_age_minutes: int) -> list[str]:
+    """Research notes waiting for the agent, skipping ones edited too recently to be finished questions."""
+    cutoff = time.time() - min_age_minutes * 60
+    pending = []
+    for path in iter_note_files(WIKI_DIR / "research"):
+        frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+        if frontmatter.get("status", "queued") == "queued" and body.strip() and path.stat().st_mtime <= cutoff:
+            pending.append(repo_relative(path))
+    return pending
+
+
+def set_research_status(text: str, status: str) -> str:
+    if not text.startswith("---\n"):
+        return f"---\ntype: research\nstatus: {status}\nupdated: {TODAY}\n---\n\n{text}"
+    frontmatter, _ = parse_frontmatter(text)
+    for key, value in {"status": status, "updated": TODAY}.items():
+        if key in frontmatter:
+            text = set_frontmatter_value(text, key, value)
+        else:
+            text = text.replace("---\n", f"---\n{key}: {value}\n", 1)
+    return text
+
+
+def command_research(args: argparse.Namespace) -> int:
+    if args.action == "pending":
+        print(json.dumps(pending_research(args.min_age_minutes)))
+        return 0
+    path = (ROOT / args.file).resolve()
+    if path.parent != (WIKI_DIR / "research").resolve() or not path.is_file():
+        raise WikiError(f"not a research note: {args.file}")
+    write_text_atomic(path, set_research_status(path.read_text(encoding="utf-8"), args.status))
+    print(f"research_status={args.status} file={repo_relative(path)}")
+    return 0
+
+
 SESSION_LOG_MAX_CHARS = 4000
 
 
@@ -1529,6 +1571,7 @@ def build_parser() -> argparse.ArgumentParser:
         "plan": command_plan,
         "session-log": command_session_log,
         "content": command_content,
+        "research": command_research,
     }
 
     subparsers.add_parser("doctor")
@@ -1603,6 +1646,16 @@ def build_parser() -> argparse.ArgumentParser:
     content_promote_parser.add_argument("--slug", required=True)
     content_promote_parser.add_argument("--to", required=True, choices=["draft", "output"])
     content_promote_parser.add_argument("--channel", help="output only, e.g. newsletter / x-thread / blog")
+
+    research_parser = subparsers.add_parser("research")
+    research_subparsers = research_parser.add_subparsers(dest="action", required=True)
+    research_pending_parser = research_subparsers.add_parser("pending", help="print waiting research notes as JSON")
+    research_pending_parser.add_argument(
+        "--min-age-minutes", type=int, default=10, help="skip notes edited more recently than this (still being typed)"
+    )
+    research_status_parser = research_subparsers.add_parser("set-status")
+    research_status_parser.add_argument("--file", required=True, help="repo-relative path, e.g. wiki/research/x.md")
+    research_status_parser.add_argument("--status", required=True, choices=RESEARCH_STATUSES)
 
     parser.set_defaults(func=lambda args: commands[args.command](args))
     return parser
