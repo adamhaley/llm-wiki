@@ -1298,6 +1298,74 @@ def command_research(args: argparse.Namespace) -> int:
     return 0
 
 
+DIGEST_OPEN_PLAN_STATUSES = ("in-progress", "ready", "planned")
+TODO_PROJECT_RE = re.compile(r"^([a-z0-9][a-z0-9-]*):\s+(.+)$")
+DATED_NOTE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+
+
+def unchecked_items(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    return [match.group(1).strip() for match in re.finditer(r"(?m)^- \[ \] (.+)$", path.read_text(encoding="utf-8"))]
+
+
+def note_title(path: Path, frontmatter: dict[str, Any], body: str) -> str:
+    heading = re.search(r"(?m)^# (.+)$", body)
+    return str(frontmatter.get("title") or (heading.group(1) if heading else path.stem)).strip()
+
+
+def digest_data(as_of: date) -> dict[str, Any]:
+    """Everything outstanding in the vault, grouped by project, for the daily digest email."""
+    projects: dict[str, dict[str, Any]] = defaultdict(lambda: {"todos": [], "plans": [], "last_activity": None})
+    unsorted = []
+    for item in unchecked_items(TODO_PATH):
+        match = TODO_PROJECT_RE.match(item)
+        if match:
+            projects[match.group(1)]["todos"].append(match.group(2))
+        else:
+            unsorted.append(item)
+
+    plan_paths = sorted(WIKI_DIR.glob("projects/*/plans/*.md")) + sorted(WIKI_DIR.glob("pages/*.md"))
+    for path in plan_paths:
+        frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+        if frontmatter.get("type", "plan" if path.parent.name == "plans" else None) != "plan":
+            continue
+        if frontmatter.get("status") not in DIGEST_OPEN_PLAN_STATUSES:
+            continue
+        project = path.parent.parent.name if path.parent.name == "plans" else "unsorted"
+        projects[project]["plans"].append({"title": note_title(path, frontmatter, body),
+                                           "status": frontmatter["status"], "path": wiki_relative(path)})
+
+    for slug, project in projects.items():
+        dated = [note.stem[:10] for note in (WIKI_DIR / "projects" / slug).glob("*/*.md") if DATED_NOTE_RE.match(note.stem)]
+        project["last_activity"] = max(dated, default=None)
+        project["slug"] = slug
+
+    since = (as_of - timedelta(days=1)).isoformat()
+    answered, failed = [], []
+    for path in iter_note_files(WIKI_DIR / "research"):
+        frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+        entry = {"title": note_title(path, frontmatter, body), "path": wiki_relative(path)}
+        if frontmatter.get("status") == "done" and str(frontmatter.get("updated", "")) >= since:
+            answered.append(entry)
+        elif frontmatter.get("status") == "failed":
+            failed.append(entry)
+
+    return {
+        "date": as_of.isoformat(),
+        "pickup": unchecked_items(WIKI_DIR / "PICKUP.md"),
+        "research": {"answered": answered, "failed": failed},
+        # Most recently active first: the digest is about current projects.
+        "projects": sorted(projects.values(), key=lambda project: project["last_activity"] or "", reverse=True),
+        "unsorted_todos": unsorted,
+    }
+
+
+def command_digest(_: argparse.Namespace) -> int:
+    print(json.dumps(digest_data(date.today())))
+    return 0
+
+
 SESSION_LOG_MAX_CHARS = 4000
 
 
@@ -1601,6 +1669,7 @@ def build_parser() -> argparse.ArgumentParser:
         "session-log": command_session_log,
         "content": command_content,
         "research": command_research,
+        "digest": command_digest,
     }
 
     subparsers.add_parser("doctor")
@@ -1676,6 +1745,7 @@ def build_parser() -> argparse.ArgumentParser:
     content_promote_parser.add_argument("--to", required=True, choices=["draft", "output"])
     content_promote_parser.add_argument("--channel", help="output only, e.g. newsletter / x-thread / blog")
 
+    subparsers.add_parser("digest", help="print outstanding todos, plans and research as JSON for the daily email")
     research_parser = subparsers.add_parser("research")
     research_subparsers = research_parser.add_subparsers(dest="action", required=True)
     research_pending_parser = research_subparsers.add_parser("pending", help="print waiting research notes as JSON")

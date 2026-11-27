@@ -348,3 +348,30 @@ class ResearchQueueTest(unittest.TestCase):
         args.func(args)
         claimed = self.research / f"{wiki_tool.TODAY}-a-b-2.md"
         self.assertEqual(wiki_tool.parse_frontmatter(claimed.read_text())[0]["status"], "in-progress")
+
+
+class DigestTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        wiki = root / "wiki"
+        (wiki / "projects" / "alpha" / "plans").mkdir(parents=True)
+        (wiki / "projects" / "alpha" / "session-logs").mkdir()
+        (wiki / "projects" / "alpha" / "session-logs" / "2020-01-05.md").write_text("log", encoding="utf-8")
+        (wiki / "projects" / "alpha" / "plans" / "2020-01-01.md").write_text("---\ntitle: Open plan\ntype: plan\nstatus: in-progress\n---\n", encoding="utf-8")
+        (wiki / "projects" / "alpha" / "plans" / "2020-01-02.md").write_text("---\ntitle: Done plan\ntype: plan\nstatus: done\n---\n", encoding="utf-8")
+        (wiki / "todo.md").write_text("- [ ] alpha: ship it\n- [x] alpha: shipped\n- [ ] no project here\n", encoding="utf-8")
+        for name, value in {"ROOT": root, "WIKI_DIR": wiki, "TODO_PATH": wiki / "todo.md"}.items():
+            patcher = mock.patch.object(wiki_tool, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_digest_groups_open_todos_and_plans_by_project(self) -> None:
+        digest = wiki_tool.digest_data(date(2020, 1, 6))
+        self.assertEqual(
+            (digest["projects"][0], digest["unsorted_todos"]),
+            ({"slug": "alpha", "last_activity": "2020-01-05", "todos": ["ship it"],
+              "plans": [{"title": "Open plan", "status": "in-progress", "path": "projects/alpha/plans/2020-01-01.md"}]},
+             ["no project here"]),
+        )
